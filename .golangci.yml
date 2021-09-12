@@ -1,0 +1,52 @@
+run:
+  timeout: 5m
+  modules-download-mode: mod
+
+linters:
+  fast: false
+  disable-all: true
+  enable:
+    - asciicheck
+    - bodyclose
+    - deadcode
+    - depguard
+    - dogsled
+    - errcheck
+    - errorlint
+    - exportloopref
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - goerr113
+    - gofmt
+    - goheader
+    - goimports
+    - golint
+    - gomodguard
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - lll
+    - makezero
+    - misspell
+    - nestif
+    - nlreturn
+    - nolintlint
+    - prealloc
+    - predeclared
+    - rowserrcheck
+    - scopelint
+    - sqlclosecheck
+    - staticcheck
+    - structcheck
+    - stylecheck
+    - testpackage
+    - tparallel
+    - typecheck
+    - unconvert
+    - unused
+    - varcheck
+    - whitespace
