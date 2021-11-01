@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dstdfx/twbridge/internal/domain"
+	"github.com/dstdfx/twbridge/internal/handler"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"go.uber.org/zap"
 )
@@ -41,9 +42,25 @@ func (mgr *Manager) Run(ctx context.Context) {
 
 			// TODO: support concurrent events handling
 
-			switch event.(type) {
+			switch e := event.(type) {
 			case *domain.StartEvent:
-				// TODO:
+				// Check if client already exists
+				if _, ok := mgr.eventHandlers[e.ChatID]; ok {
+					return
+				}
+
+				// Create and run events handler for new client
+				handlerCh := make(chan domain.Event, 1)
+				evHandler := handler.NewEventsHandler(mgr.log, &handler.Opts{
+					ChatID: e.ChatID,
+					IncomingEvents: handlerCh,
+					TelegramAPI:    mgr.telegramAPI,
+				})
+				go evHandler.Run(ctx)
+
+				// Update mapping and send the event to the newly created handler
+				mgr.eventHandlers[e.ChatID] = handlerCh
+				handlerCh <- e
 			case *domain.LoginEvent:
 				// TODO: delegate the event to the event handler of the client
 			}
