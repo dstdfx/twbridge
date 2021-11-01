@@ -36,6 +36,12 @@ func Start() {
 		logger.Panic(fmt.Sprintf("%s is required", telegramAPITokenEnv))
 	}
 
+	logger.Info("twbridge is running...",
+		zap.String("build_commit", buildGitCommit),
+		zap.String("build_tag", buildGitTag),
+		zap.String("build_date", buildDate),
+		zap.String("go_version", buildCompiler))
+
 	// Create telegram bot instance
 	bot, err := tgbotapi.NewBotAPI(apiToken)
 	if err != nil {
