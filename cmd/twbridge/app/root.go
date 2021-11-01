@@ -26,7 +26,7 @@ var (
 const telegramAPITokenEnv = "TELEGRAM_API_TOKEN"
 
 func Start() {
-	logger, err := log.NewLogger(zap.DebugLevel, zap.String("service", "twproxy"))
+	logger, err := log.NewLogger(zap.DebugLevel, zap.String("service", "twbridge"))
 	if err != nil {
 		panic(err)
 	}
