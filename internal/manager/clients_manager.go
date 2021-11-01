@@ -41,7 +41,7 @@ func (mgr *Manager) Run(ctx context.Context) {
 
 			// TODO: support concurrent events handling
 
-			switch _ := event.(type) {
+			switch event.(type) {
 			case *domain.StartEvent:
 				// TODO:
 			case *domain.LoginEvent:
