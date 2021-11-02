@@ -47,7 +47,7 @@ func (le *LoginEvent) Type() EventType {
 }
 
 type TextMessageEvent struct {
-	WhatsappSenderJid string
+	WhatsappRemoteJid  string
 	WhatsappSenderName string
 	Text string
 }

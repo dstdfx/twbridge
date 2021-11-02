@@ -58,7 +58,7 @@ func (wh *EventsProvider) HandleTextMessage(message whatsapp.TextMessage) {
 	// Get the contact name from the contacts store
 	var contactName string
 	contacts := wh.whatsappConn.Store.Contacts
-	contact, ok := contacts[message.Info.SenderJid]
+	contact, ok := contacts[message.Info.RemoteJid]
 	if !ok {
 		contactName = "<unknown>"
 	} else {
@@ -68,7 +68,7 @@ func (wh *EventsProvider) HandleTextMessage(message whatsapp.TextMessage) {
 	// TODO: handle outgoing events overflow
 	select {
 	case wh.outgoingEvents <- &domain.TextMessageEvent{
-		WhatsappSenderJid:  message.Info.SenderJid,
+		WhatsappRemoteJid:  message.Info.RemoteJid,
 		WhatsappSenderName: contactName,
 		Text:               message.Text,
 	}:

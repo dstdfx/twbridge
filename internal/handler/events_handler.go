@@ -165,12 +165,12 @@ func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
 
 func (eh *EventsHandler) handleTextMessage(event *domain.TextMessageEvent) {
 	eh.log.Debug("handle text message event",
-		zap.String("sender_jid", event.WhatsappSenderJid),
+		zap.String("remote_jid", event.WhatsappRemoteJid),
 		zap.String("sender_name", event.WhatsappSenderName))
 
 	textMessageTemplate := fmt.Sprintf(textMessageFmt,
 		event.WhatsappSenderName,
-		event.WhatsappSenderJid,
+		event.WhatsappRemoteJid,
 		event.Text)
 
 	msg := tgbotapi.NewMessage(eh.chatID, textMessageTemplate)
