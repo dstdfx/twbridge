@@ -1,10 +1,14 @@
 package handler
 
 import (
+	"bytes"
 	"context"
+	"time"
 
+	"github.com/Rhymen/go-whatsapp"
 	"github.com/dstdfx/twbridge/internal/domain"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/skip2/go-qrcode"
 	"go.uber.org/zap"
 )
 
@@ -13,6 +17,7 @@ type EventsHandler struct {
 	chatID       int64
 	eventsCh     chan domain.Event
 	telegramAPI  *tgbotapi.BotAPI
+	whatsappConn *whatsapp.Conn
 }
 
 type Opts struct {
@@ -44,7 +49,7 @@ func (eh *EventsHandler) Run(ctx context.Context) {
 			case *domain.StartEvent:
 				eh.handleStartEvent(e)
 			case *domain.LoginEvent:
-				// TODO:
+				eh.handleLoginEvent(e)
 			case *domain.TextMessageEvent:
 				// TODO:
 			}
@@ -66,4 +71,69 @@ func (eh *EventsHandler) handleStartEvent(event *domain.StartEvent) {
 	if _, err := eh.telegramAPI.Send(msg); err != nil {
 		eh.log.Error("failed to send start message to telegram", zap.Error(err))
 	}
+}
+
+func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
+	eh.log.Debug("handle whatsapp login",
+		zap.String("username", event.FromUser),
+		zap.Int64("chat_id", event.ChatID))
+
+	wac, err := whatsapp.NewConnWithOptions(&whatsapp.Options{
+		Timeout:         20 * time.Second,
+	})
+	if err != nil {
+		eh.log.Error("failed to establish new whatsapp connection", zap.Error(err))
+
+		return
+	}
+
+	eh.whatsappConn = wac
+
+	// TODO: add whatsapp events provider here
+	//wac.AddHandler(eventsProvider)
+	wac.SetClientVersion(2, 2134, 10)
+
+	qr := make(chan string)
+	go func() {
+		qrCode, err := qrcode.New(<-qr, qrcode.Low)
+		if err != nil {
+			eh.log.Error("failed to receive a QR code", zap.Error(err))
+
+			return
+		}
+
+		rawCode, err := qrCode.PNG(256)
+		if err != nil {
+			eh.log.Error("failed to parse QR code", zap.Error(err))
+
+			return
+		}
+
+		qrCodeReader := tgbotapi.FileReader{
+			Name: "QrCode",
+			Reader: bytes.NewReader(rawCode),
+			Size: int64(len(rawCode)),
+		}
+
+		photo := tgbotapi.NewPhotoUpload(event.ChatID, qrCodeReader)
+		if _, err := eh.telegramAPI.Send(photo); err != nil {
+			eh.log.Error("failed to send new whatsapp connection", zap.Error(err))
+
+			return
+		}
+
+
+		eh.log.Debug("QR code has been sent")
+	}()
+
+	session, err := wac.Login(qr)
+	if err != nil {
+		eh.log.Error("failed to login to whatsapp", zap.Error(err))
+
+		return
+	}
+
+	eh.log.Debug("login successful", zap.String("client_id", session.ClientId))
+
+	// TODO: notify via telegram
 }

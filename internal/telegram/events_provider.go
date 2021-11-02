@@ -58,7 +58,10 @@ func (ep *EventsProvider) Run(ctx context.Context) error {
 					FromUser: update.Message.From.UserName,
 				}
 			case "/login":
-				// TODO: handle login events
+				ep.eventsCh <- &domain.LoginEvent{
+					ChatID:   update.Message.Chat.ID,
+					FromUser: update.Message.From.UserName,
+				}
 			default:
 				// TODO: handle reply events
 			}

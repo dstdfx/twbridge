@@ -62,7 +62,14 @@ func (mgr *Manager) Run(ctx context.Context) {
 				mgr.eventHandlers[e.ChatID] = handlerCh
 				handlerCh <- e
 			case *domain.LoginEvent:
+				// TODO: check if the client is already logged in
 				// TODO: delegate the event to the event handler of the client
+				handlerCh, ok := mgr.eventHandlers[e.ChatID]
+				if !ok {
+					// TODO: handle error
+				}
+
+				handlerCh <- event
 			}
 		}
 	}
