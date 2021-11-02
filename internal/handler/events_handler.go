@@ -7,6 +7,7 @@ import (
 
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/dstdfx/twbridge/internal/domain"
+	whatsappevents "github.com/dstdfx/twbridge/internal/whatsapp"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/skip2/go-qrcode"
 	"go.uber.org/zap"
@@ -89,8 +90,11 @@ func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
 
 	eh.whatsappConn = wac
 
-	// TODO: add whatsapp events provider here
-	//wac.AddHandler(eventsProvider)
+	waHandler := whatsappevents.NewEventsProvider(eh.log, &whatsappevents.Opts{
+		OutgoingEvents: eh.eventsCh,
+		WhatsappConn: eh.whatsappConn,
+	})
+	wac.AddHandler(waHandler)
 	wac.SetClientVersion(2, 2134, 10)
 
 	qr := make(chan string)
@@ -125,6 +129,8 @@ func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
 
 		eh.log.Debug("QR code has been sent")
 	}()
+
+	// TODO: save and restore sessions
 
 	session, err := wac.Login(qr)
 	if err != nil {
