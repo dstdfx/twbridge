@@ -3,6 +3,7 @@ package handler
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/Rhymen/go-whatsapp"
@@ -18,8 +19,15 @@ const (
 	defaultWhatsappClientMinorVersion = 2134
 	defaultWhatsappClientPatchVersion = 10
 	defaultWhatsappConnTimeout = 20 * time.Second
+
 	defaultQRCodePNGSize = 256
+
+	textMessageFmt = `From: %s
+Jid: %s
+= = = = = = = = = = = =
+Message: %s`
 )
+
 
 type EventsHandler struct {
 	log          *zap.Logger
@@ -60,7 +68,7 @@ func (eh *EventsHandler) Run(ctx context.Context) {
 			case *domain.LoginEvent:
 				eh.handleLoginEvent(e)
 			case *domain.TextMessageEvent:
-				// TODO:
+				eh.handleTextMessage(e)
 			}
 		}
 	}
@@ -153,4 +161,20 @@ func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
 	eh.log.Debug("login successful", zap.String("client_id", session.ClientId))
 
 	// TODO: notify via telegram
+}
+
+func (eh *EventsHandler) handleTextMessage(event *domain.TextMessageEvent) {
+	eh.log.Debug("handle text message event",
+		zap.String("sender_jid", event.WhatsappSenderJid),
+		zap.String("sender_name", event.WhatsappSenderName))
+
+	textMessageTemplate := fmt.Sprintf(textMessageFmt,
+		event.WhatsappSenderName,
+		event.WhatsappSenderJid,
+		event.Text)
+
+	msg := tgbotapi.NewMessage(eh.chatID, textMessageTemplate)
+	if _, err := eh.telegramAPI.Send(msg); err != nil {
+		eh.log.Error("failed to send message to telegram", zap.Error(err))
+	}
 }
