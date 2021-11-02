@@ -13,6 +13,14 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	defaultWhatsappClientMajorVersion = 2
+	defaultWhatsappClientMinorVersion = 2134
+	defaultWhatsappClientPatchVersion = 10
+	defaultWhatsappConnTimeout = 20 * time.Second
+	defaultQRCodePNGSize = 256
+)
+
 type EventsHandler struct {
 	log          *zap.Logger
 	chatID       int64
@@ -80,7 +88,7 @@ func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
 		zap.Int64("chat_id", event.ChatID))
 
 	wac, err := whatsapp.NewConnWithOptions(&whatsapp.Options{
-		Timeout:         20 * time.Second,
+		Timeout:         defaultWhatsappConnTimeout,
 	})
 	if err != nil {
 		eh.log.Error("failed to establish new whatsapp connection", zap.Error(err))
@@ -95,7 +103,10 @@ func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
 		WhatsappConn: eh.whatsappConn,
 	})
 	wac.AddHandler(waHandler)
-	wac.SetClientVersion(2, 2134, 10)
+	wac.SetClientVersion(
+		defaultWhatsappClientMajorVersion,
+		defaultWhatsappClientMinorVersion,
+		defaultWhatsappClientPatchVersion)
 
 	qr := make(chan string)
 	go func() {
@@ -106,7 +117,7 @@ func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
 			return
 		}
 
-		rawCode, err := qrCode.PNG(256)
+		rawCode, err := qrCode.PNG(defaultQRCodePNGSize)
 		if err != nil {
 			eh.log.Error("failed to parse QR code", zap.Error(err))
 
