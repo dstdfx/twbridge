@@ -8,27 +8,34 @@ import (
 	"go.uber.org/zap"
 )
 
+// EventsProvider represents whatsapp events provider.
 type EventsProvider struct {
-	log         *zap.Logger
-	whatsappConn *whatsapp.Conn
+	log            *zap.Logger
+	whatsappConn   *whatsapp.Conn
 	outgoingEvents chan domain.Event
-	startAt int64
+	startAt        int64
 }
 
+// Opts represents options to create new instance of EventsProvider.
 type Opts struct {
+	// OutgoingEvents is a channel to send events to.
 	OutgoingEvents chan domain.Event
+
+	// WhatsappConn represents a connection to work with whatsapp API.
 	WhatsappConn *whatsapp.Conn
 }
 
+// NewEventsProvider creates new instance of EventsProvider.
 func NewEventsProvider(log *zap.Logger, opts *Opts) *EventsProvider {
 	return &EventsProvider{
 		log:            log,
-		startAt: time.Now().Unix(),
+		startAt:        time.Now().Unix(),
 		outgoingEvents: opts.OutgoingEvents,
-		whatsappConn: opts.WhatsappConn,
+		whatsappConn:   opts.WhatsappConn,
 	}
 }
 
+// HandleError method is called when error occurs.
 func (wh *EventsProvider) HandleError(err error) {
 	wh.log.Error("got error, trying to restore connection...", zap.Error(err))
 
@@ -37,10 +44,12 @@ func (wh *EventsProvider) HandleError(err error) {
 	}
 }
 
+// ShouldCallSynchronously method indicates how whatsapp events should be handled.
 func (wh *EventsProvider) ShouldCallSynchronously() bool {
 	return true
 }
 
+// HandleTextMessage method is called when new text message is received.
 func (wh *EventsProvider) HandleTextMessage(message whatsapp.TextMessage) {
 	if message.Info.Timestamp < uint64(wh.startAt) || message.Info.FromMe {
 		return
@@ -75,3 +84,5 @@ func (wh *EventsProvider) HandleTextMessage(message whatsapp.TextMessage) {
 	default:
 	}
 }
+
+// TODO: implements domain.EventsProvider
