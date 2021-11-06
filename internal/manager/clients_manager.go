@@ -9,27 +9,33 @@ import (
 	"go.uber.org/zap"
 )
 
+// Manager handles incoming events from telegram provider and manages new
+// and existing clients of the bot.
 type Manager struct {
-	log *zap.Logger
+	log            *zap.Logger
 	incomingEvents <-chan domain.Event
-	telegramAPI *tgbotapi.BotAPI
-	eventHandlers map[int64]chan <- domain.Event
+	telegramAPI    *tgbotapi.BotAPI
+	eventHandlers  map[int64]chan<- domain.Event
 }
 
+// Opts represents options to create new instance of Manager.
 type Opts struct {
 	IncomingEvents <-chan domain.Event
-	TelegramAPI *tgbotapi.BotAPI
+	TelegramAPI    *tgbotapi.BotAPI
 }
 
+// NewManager returns new instance of NewManager.
 func NewManager(log *zap.Logger, opts *Opts) *Manager {
 	return &Manager{
 		log:            log,
 		incomingEvents: opts.IncomingEvents,
-		eventHandlers:  make(map[int64]chan <- domain.Event),
-		telegramAPI: opts.TelegramAPI,
+		eventHandlers:  make(map[int64]chan<- domain.Event),
+		telegramAPI:    opts.TelegramAPI,
 	}
 }
 
+// Run method starts the main goroutine of Manager.
+// The call is blocking.
 func (mgr *Manager) Run(ctx context.Context) {
 	for {
 		select {
@@ -52,7 +58,7 @@ func (mgr *Manager) Run(ctx context.Context) {
 				// Create and run events handler for new client
 				handlerCh := make(chan domain.Event, 1)
 				evHandler := handler.NewEventsHandler(mgr.log, &handler.Opts{
-					ChatID: e.ChatID,
+					ChatID:         e.ChatID,
 					IncomingEvents: handlerCh,
 					TelegramAPI:    mgr.telegramAPI,
 				})
