@@ -18,7 +18,7 @@ const (
 	defaultWhatsappClientMajorVersion = 2
 	defaultWhatsappClientMinorVersion = 2134
 	defaultWhatsappClientPatchVersion = 10
-	defaultWhatsappConnTimeout = 20 * time.Second
+	defaultWhatsappConnTimeout        = 20 * time.Second
 
 	defaultQRCodePNGSize = 256
 
@@ -28,7 +28,8 @@ Jid: %s
 Message: %s`
 )
 
-
+// EventsHandler represents entity that handles events from telegram and whatsapp
+// event providers.
 type EventsHandler struct {
 	log          *zap.Logger
 	chatID       int64
@@ -37,21 +38,25 @@ type EventsHandler struct {
 	whatsappConn *whatsapp.Conn
 }
 
+// Opts represents options to create new instance of EventsHandler.
 type Opts struct {
-	ChatID int64
+	ChatID         int64
 	IncomingEvents chan domain.Event
 	TelegramAPI    *tgbotapi.BotAPI
 }
 
+// NewEventsHandler creates new instance of EventsHandler.
 func NewEventsHandler(log *zap.Logger, opts *Opts) *EventsHandler {
 	return &EventsHandler{
 		log:         log,
-		chatID: opts.ChatID,
+		chatID:      opts.ChatID,
 		eventsCh:    opts.IncomingEvents,
 		telegramAPI: opts.TelegramAPI,
 	}
 }
 
+// Run method starts the main goroutine of EventsHandler.
+// The call is blocking.
 func (eh *EventsHandler) Run(ctx context.Context) {
 	for {
 		select {
@@ -96,7 +101,7 @@ func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
 		zap.Int64("chat_id", event.ChatID))
 
 	wac, err := whatsapp.NewConnWithOptions(&whatsapp.Options{
-		Timeout:         defaultWhatsappConnTimeout,
+		Timeout: defaultWhatsappConnTimeout,
 	})
 	if err != nil {
 		eh.log.Error("failed to establish new whatsapp connection", zap.Error(err))
@@ -106,9 +111,10 @@ func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
 
 	eh.whatsappConn = wac
 
+	// TODO: call EventsStream when domain.EventsProvider is implemented
 	waHandler := whatsappevents.NewEventsProvider(eh.log, &whatsappevents.Opts{
 		OutgoingEvents: eh.eventsCh,
-		WhatsappConn: eh.whatsappConn,
+		WhatsappConn:   eh.whatsappConn,
 	})
 	wac.AddHandler(waHandler)
 	wac.SetClientVersion(
@@ -133,9 +139,9 @@ func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
 		}
 
 		qrCodeReader := tgbotapi.FileReader{
-			Name: "QrCode",
+			Name:   "QrCode",
 			Reader: bytes.NewReader(rawCode),
-			Size: int64(len(rawCode)),
+			Size:   int64(len(rawCode)),
 		}
 
 		photo := tgbotapi.NewPhotoUpload(event.ChatID, qrCodeReader)
@@ -144,7 +150,6 @@ func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
 
 			return
 		}
-
 
 		eh.log.Debug("QR code has been sent")
 	}()
