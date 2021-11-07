@@ -10,47 +10,37 @@ import (
 
 // EventsProvider represents telegram events provider.
 type EventsProvider struct {
-	log         *zap.Logger
-	telegramAPI *tgbotapi.BotAPI
-	eventsCh    chan domain.Event
+	log               *zap.Logger
+	eventsCh          chan domain.Event
+	telegramUpdatesCh tgbotapi.UpdatesChannel
 }
 
 // Opts represents options to create new instance of EventsProvider.
 type Opts struct {
-	// TelegramAPI is a client to interact with telegram API.
-	TelegramAPI *tgbotapi.BotAPI
+	// TelegramUpdates is a channel to receive telegram updates from.
+	TelegramUpdates tgbotapi.UpdatesChannel
 }
 
 // NewEventsProvider creates new instance of EventsProvider.
 func NewEventsProvider(log *zap.Logger, opts *Opts) *EventsProvider {
 	return &EventsProvider{
-		log:         log,
-		telegramAPI: opts.TelegramAPI,
-		eventsCh:    make(chan domain.Event),
+		log:               log,
+		telegramUpdatesCh: opts.TelegramUpdates,
+		eventsCh:          make(chan domain.Event, 1),
 	}
 }
 
 // Run method starts the main goroutine of EventsProvider.
 // The call is blocking.
 func (ep *EventsProvider) Run(ctx context.Context) error {
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-
-	updates, err := ep.telegramAPI.GetUpdatesChan(u)
-	if err != nil {
-		ep.log.Error("failed to get updates chan", zap.Error(err))
-
-		return err
-	}
-
 	for {
 		select {
 		case <-ctx.Done():
-			ep.telegramAPI.StopReceivingUpdates()
+			ep.telegramUpdatesCh.Clear()
 			close(ep.eventsCh)
 
 			return nil
-		case update := <-updates:
+		case update := <-ep.telegramUpdatesCh:
 			if update.Message == nil { // ignore any non-Message Updates
 				continue
 			}

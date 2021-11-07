@@ -23,7 +23,11 @@ var (
 	buildCompiler  = runtime.Version()
 )
 
-const telegramAPITokenEnv = "TELEGRAM_API_TOKEN"
+const (
+	telegramAPITokenEnv = "TELEGRAM_API_TOKEN"
+
+	defaultTelegramReceiveTimeout = 60
+)
 
 func Start() {
 	logger, err := log.NewLogger(zap.DebugLevel, zap.String("service", "twbridge"))
@@ -52,9 +56,22 @@ func Start() {
 	rootCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
+	// TODO: use webhook for receiving tg updates
+
+	// Create telegram config
+	u := tgbotapi.NewUpdate(0)
+	u.Timeout = defaultTelegramReceiveTimeout
+
+	// Create telegram updates channel
+	tgUpdatesCh, err := bot.GetUpdatesChan(u)
+	if err != nil {
+		logger.Panic("failed to get updates chan", zap.Error(err))
+	}
+	defer bot.StopReceivingUpdates()
+
 	// Create telegram events provider instance
 	eventsProvider := telegram.NewEventsProvider(logger, &telegram.Opts{
-		TelegramAPI: bot,
+		TelegramUpdates: tgUpdatesCh,
 	})
 
 	// Create clients manager instance
