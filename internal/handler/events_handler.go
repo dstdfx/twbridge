@@ -40,9 +40,14 @@ type EventsHandler struct {
 
 // Opts represents options to create new instance of EventsHandler.
 type Opts struct {
-	ChatID         int64
+	// ChatID is telegram bot chat identifier.
+	ChatID int64
+
+	// IncomingEvents is a channel to receive events from.
 	IncomingEvents chan domain.Event
-	TelegramAPI    *tgbotapi.BotAPI
+
+	// TelegramAPI is a client to interact with telegram API.
+	TelegramAPI *tgbotapi.BotAPI
 }
 
 // NewEventsHandler creates new instance of EventsHandler.

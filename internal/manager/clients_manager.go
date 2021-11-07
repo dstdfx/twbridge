@@ -20,8 +20,11 @@ type Manager struct {
 
 // Opts represents options to create new instance of Manager.
 type Opts struct {
+	// IncomingEvents is a channel to receive events from.
 	IncomingEvents <-chan domain.Event
-	TelegramAPI    *tgbotapi.BotAPI
+
+	// TelegramAPI is a client to interact with telegram API.
+	TelegramAPI *tgbotapi.BotAPI
 }
 
 // NewManager returns new instance of NewManager.

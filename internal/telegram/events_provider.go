@@ -17,6 +17,7 @@ type EventsProvider struct {
 
 // Opts represents options to create new instance of EventsProvider.
 type Opts struct {
+	// TelegramAPI is a client to interact with telegram API.
 	TelegramAPI *tgbotapi.BotAPI
 }
 
