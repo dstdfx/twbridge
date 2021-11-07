@@ -16,7 +16,7 @@ import (
 var _ domain.EventProvider = new(telegram.EventsProvider)
 
 func TestEventsProvider(t *testing.T) {
-	tgUpdatesCh := make(chan tgbotapi.Update, 0)
+	tgUpdatesCh := make(chan tgbotapi.Update)
 	eventsProvider := telegram.NewEventsProvider(zap.NewNop(), &telegram.Opts{TelegramUpdates: tgUpdatesCh})
 
 	rootCtx, cancel := context.WithCancel(context.Background())

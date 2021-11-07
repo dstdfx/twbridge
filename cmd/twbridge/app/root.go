@@ -88,8 +88,6 @@ func Start() {
 		}
 	}()
 
-	select {
-	case <-rootCtx.Done():
-		stop()
-	}
+	<-rootCtx.Done()
+	stop()
 }
