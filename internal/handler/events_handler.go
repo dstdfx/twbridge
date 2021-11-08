@@ -116,7 +116,6 @@ func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
 
 	eh.whatsappConn = wac
 
-	// TODO: call EventsStream when domain.EventsProvider is implemented
 	waHandler := whatsappevents.NewEventsProvider(eh.log, &whatsappevents.Opts{
 		OutgoingEvents: eh.eventsCh,
 		WhatsappConn:   eh.whatsappConn,

@@ -84,5 +84,3 @@ func (wh *EventsProvider) HandleTextMessage(message whatsapp.TextMessage) {
 	default:
 	}
 }
-
-// TODO: implements domain.EventsProvider

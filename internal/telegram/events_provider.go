@@ -69,8 +69,3 @@ func (ep *EventsProvider) Run(ctx context.Context) error {
 func (ep *EventsProvider) EventsStream() <-chan domain.Event {
 	return ep.eventsCh
 }
-
-// Type method returns a type of the provider.
-func (ep *EventsProvider) Type() domain.EventProviderType {
-	return domain.TelegramEventProvider
-}

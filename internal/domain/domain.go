@@ -1,19 +1,5 @@
 package domain
 
-type EventProviderType string
-
-const (
-	TelegramEventProvider EventProviderType = "telegram"
-	WhatsappEventProvider EventProviderType = "whatsapp"
-)
-
-type EventProvider interface {
-	EventsStream() <-chan Event
-	Type() EventProviderType
-}
-
-type EventsHandler interface{}
-
 // EventType represents an event type.
 type EventType string
 

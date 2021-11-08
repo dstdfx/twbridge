@@ -13,8 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var _ domain.EventProvider = new(telegram.EventsProvider)
-
 func TestEventsProvider(t *testing.T) {
 	tgUpdatesCh := make(chan tgbotapi.Update)
 	eventsProvider := telegram.NewEventsProvider(zap.NewNop(), &telegram.Opts{TelegramUpdates: tgUpdatesCh})
