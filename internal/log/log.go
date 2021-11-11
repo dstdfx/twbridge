@@ -5,15 +5,6 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// Opts represents options to init zap logger.
-type Opts struct {
-	// Level represents the minimum enabled logging level.
-	Level zapcore.Level
-
-	// Fields represents additional fields that will be applied.
-	Fields []zapcore.Field
-}
-
 // NewLogger initializes standard zap.Logger from the provided arguments.
 // By default, level field is represented as numeric.
 func NewLogger(level zapcore.Level, fields ...zapcore.Field) (*zap.Logger, error) {
