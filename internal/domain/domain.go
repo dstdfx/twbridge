@@ -74,3 +74,20 @@ type ReplyEvent struct {
 func (re *ReplyEvent) Type() EventType {
 	return ReplyEventType
 }
+
+/* Whatsapp related domain entities */
+
+// WhatsappContact represents whatsapp contact.
+type WhatsappContact struct {
+	// Jid is a contact's identifier.
+	Jid    string
+
+	// Name is a name of the contact.
+	Name   string
+}
+
+// WhatsappClient represents a common interface that describes whatsapp client behaviour.
+type WhatsappClient interface {
+	Restore() error
+	GetContacts() map[string]WhatsappContact
+}

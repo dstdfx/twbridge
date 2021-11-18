@@ -34,8 +34,8 @@ type EventsHandler struct {
 	log          *zap.Logger
 	chatID       int64
 	eventsCh     chan domain.Event
-	telegramAPI  *tgbotapi.BotAPI
-	whatsappConn *whatsapp.Conn
+	telegramAPI    *tgbotapi.BotAPI
+	whatsappClient domain.WhatsappClient
 }
 
 // Opts represents options to create new instance of EventsHandler.
@@ -114,11 +114,13 @@ func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
 		return
 	}
 
-	eh.whatsappConn = wac
+	// Initialize new whatsapp client
+	eh.whatsappClient = whatsappevents.NewClient(wac)
 
+	// Initialize whatsapp events provider
 	waHandler := whatsappevents.NewEventsProvider(eh.log, &whatsappevents.Opts{
 		OutgoingEvents: eh.eventsCh,
-		WhatsappConn:   eh.whatsappConn,
+		WhatsappClient: eh.whatsappClient,
 	})
 	wac.AddHandler(waHandler)
 	wac.SetClientVersion(

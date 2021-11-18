@@ -11,7 +11,7 @@ import (
 // EventsProvider represents whatsapp events provider.
 type EventsProvider struct {
 	log            *zap.Logger
-	whatsappConn   *whatsapp.Conn
+	whatsappClient domain.WhatsappClient
 	outgoingEvents chan domain.Event
 	startAt        int64
 }
@@ -21,8 +21,8 @@ type Opts struct {
 	// OutgoingEvents is a channel to send events to.
 	OutgoingEvents chan domain.Event
 
-	// WhatsappConn represents a connection to work with whatsapp API.
-	WhatsappConn *whatsapp.Conn
+	// WhatsappClient represents a client to work with whatsapp API.
+	WhatsappClient domain.WhatsappClient
 }
 
 // NewEventsProvider creates new instance of EventsProvider.
@@ -31,7 +31,7 @@ func NewEventsProvider(log *zap.Logger, opts *Opts) *EventsProvider {
 		log:            log,
 		startAt:        time.Now().Unix(),
 		outgoingEvents: opts.OutgoingEvents,
-		whatsappConn:   opts.WhatsappConn,
+		whatsappClient: opts.WhatsappClient,
 	}
 }
 
@@ -39,7 +39,7 @@ func NewEventsProvider(log *zap.Logger, opts *Opts) *EventsProvider {
 func (wh *EventsProvider) HandleError(err error) {
 	wh.log.Error("got error, trying to restore connection...", zap.Error(err))
 
-	if err := wh.whatsappConn.Restore(); err != nil {
+	if err := wh.whatsappClient.Restore(); err != nil {
 		wh.log.Error("failed to restore whatsapp connection", zap.Error(err))
 	}
 }
@@ -66,7 +66,7 @@ func (wh *EventsProvider) HandleTextMessage(message whatsapp.TextMessage) {
 
 	// Get the contact name from the contacts store
 	var contactName string
-	contacts := wh.whatsappConn.Store.Contacts
+	contacts := wh.whatsappClient.GetContacts()
 	contact, ok := contacts[message.Info.RemoteJid]
 	if !ok {
 		contactName = "<unknown>"
