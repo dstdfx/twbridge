@@ -165,6 +165,7 @@ func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
 	session, err := wac.Login(qr)
 	if err != nil {
 		eh.log.Error("failed to login to whatsapp", zap.Error(err))
+		// TODO: handle qr scan timeout
 
 		return
 	}
