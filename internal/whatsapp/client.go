@@ -35,3 +35,10 @@ func (c *Client) GetContacts() map[string]domain.WhatsappContact {
 
 	return contacts
 }
+
+// Send method sends data via whatsapp client.
+func (c *Client) Send(msg interface{}) (err error) {
+	_, err = c.wc.Send(msg)
+
+	return
+}
