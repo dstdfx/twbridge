@@ -81,10 +81,10 @@ func (re *ReplyEvent) Type() EventType {
 // WhatsappContact represents whatsapp contact.
 type WhatsappContact struct {
 	// Jid is a contact's identifier.
-	Jid    string
+	Jid string
 
 	// Name is a name of the contact.
-	Name   string
+	Name string
 }
 
 // WhatsappClient represents a common interface that describes whatsapp client behaviour.

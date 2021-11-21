@@ -27,7 +27,7 @@ func TestEventsProvider(t *testing.T) {
 		whatsappClientMock.On("Restore").Once().Return(nil)
 
 		// Call method in order to emulate whatsapp event
-		eventsProvider.HandleError(errors.New("test error"))
+		eventsProvider.HandleError(errors.New("test error")) //nolint
 		whatsappClientMock.AssertCalled(t, "Restore")
 	})
 
@@ -55,12 +55,12 @@ func TestEventsProvider(t *testing.T) {
 			},
 		}
 		testMessage := whatsappsdk.TextMessage{
-			Info:        whatsappsdk.MessageInfo{
+			Info: whatsappsdk.MessageInfo{
 				Id:        "1",
 				RemoteJid: "test-contact1-jid",
 				Timestamp: uint64(time.Now().Add(time.Minute).UnixNano()),
 			},
-			Text:        "test message",
+			Text: "test message",
 		}
 
 		wg := &sync.WaitGroup{}
@@ -68,7 +68,7 @@ func TestEventsProvider(t *testing.T) {
 
 		var gotEvent domain.Event
 		go func() {
-			gotEvent = <- outgoingEvents
+			gotEvent = <-outgoingEvents
 			wg.Done()
 		}()
 
@@ -114,12 +114,12 @@ func TestEventsProvider(t *testing.T) {
 			},
 		}
 		testMessage := whatsappsdk.TextMessage{
-			Info:        whatsappsdk.MessageInfo{
+			Info: whatsappsdk.MessageInfo{
 				Id:        "1",
 				RemoteJid: "test-contact999-jid",
 				Timestamp: uint64(time.Now().Add(time.Minute).UnixNano()),
 			},
-			Text:        "test message from unknown user",
+			Text: "test message from unknown user",
 		}
 
 		wg := &sync.WaitGroup{}
@@ -127,7 +127,7 @@ func TestEventsProvider(t *testing.T) {
 
 		var gotEvent domain.Event
 		go func() {
-			gotEvent = <- outgoingEvents
+			gotEvent = <-outgoingEvents
 			wg.Done()
 		}()
 
@@ -159,12 +159,12 @@ func TestEventsProvider(t *testing.T) {
 		})
 
 		testMessage := whatsappsdk.TextMessage{
-			Info:        whatsappsdk.MessageInfo{
+			Info: whatsappsdk.MessageInfo{
 				Id:        "1",
 				RemoteJid: "test-contact1-jid",
 				Timestamp: 1,
 			},
-			Text:        "test message",
+			Text: "test message",
 		}
 
 		whatsappClientMock.On("GetContacts")
@@ -184,13 +184,13 @@ func TestEventsProvider(t *testing.T) {
 		})
 
 		testMessage := whatsappsdk.TextMessage{
-			Info:        whatsappsdk.MessageInfo{
+			Info: whatsappsdk.MessageInfo{
 				Id:        "1",
 				RemoteJid: "test-contact1-jid",
-				FromMe: true,
+				FromMe:    true,
 				Timestamp: uint64(time.Now().Add(time.Minute).UnixNano()),
 			},
-			Text:        "test message",
+			Text: "test message",
 		}
 
 		whatsappClientMock.On("GetContacts")

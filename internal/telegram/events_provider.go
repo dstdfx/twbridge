@@ -67,19 +67,19 @@ func (ep *EventsProvider) Run(ctx context.Context) error {
 						zap.String("text", update.Message.Text),
 						zap.String("reply_to", update.Message.ReplyToMessage.Text))
 
-						// Extract jid from the message that is replied to
-						jidStart := strings.Index(update.Message.ReplyToMessage.Text, "jid:")
-						jidEnd := strings.Index(update.Message.ReplyToMessage.Text,"]")
+					// Extract jid from the message that is replied to
+					jidStart := strings.Index(update.Message.ReplyToMessage.Text, "jid:")
+					jidEnd := strings.Index(update.Message.ReplyToMessage.Text, "]")
 
 					// TODO: check borders properly
-						if jidStart != -1 && jidEnd != -1 && jidStart < jidEnd{
-							ep.eventsCh <- &domain.ReplyEvent{
-								ChatID:   update.Message.Chat.ID,
-								FromUser: update.Message.From.UserName,
-								Reply:    update.Message.Text,
-								RemoteJid: update.Message.ReplyToMessage.Text[jidStart+5:jidEnd],
-							}
+					if jidStart != -1 && jidEnd != -1 && jidStart < jidEnd {
+						ep.eventsCh <- &domain.ReplyEvent{
+							ChatID:    update.Message.Chat.ID,
+							FromUser:  update.Message.From.UserName,
+							Reply:     update.Message.Text,
+							RemoteJid: update.Message.ReplyToMessage.Text[jidStart+5 : jidEnd],
 						}
+					}
 				}
 			}
 		}

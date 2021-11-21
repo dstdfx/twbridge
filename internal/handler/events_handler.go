@@ -30,9 +30,9 @@ Message: %s`
 // EventsHandler represents entity that handles events from telegram and whatsapp
 // event providers.
 type EventsHandler struct {
-	log          *zap.Logger
-	chatID       int64
-	eventsCh     chan domain.Event
+	log            *zap.Logger
+	chatID         int64
+	eventsCh       chan domain.Event
 	telegramAPI    *tgbotapi.BotAPI
 	whatsappClient domain.WhatsappClient
 }

@@ -4,6 +4,7 @@ import (
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/dstdfx/twbridge/internal/domain"
 )
+
 // Client represents a whatsapp connection wrapper.
 type Client struct {
 	wc *whatsapp.Conn
@@ -22,7 +23,7 @@ func (c *Client) Restore() error {
 // GetContacts method returns a list of whatsapp contacts.
 func (c *Client) GetContacts() map[string]domain.WhatsappContact {
 	if c.wc.Store == nil {
-		return make(map[string]domain.WhatsappContact, 0)
+		return make(map[string]domain.WhatsappContact)
 	}
 
 	contacts := make(map[string]domain.WhatsappContact, len(c.wc.Store.Contacts))
