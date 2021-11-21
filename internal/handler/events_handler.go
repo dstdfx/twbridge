@@ -176,7 +176,10 @@ func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
 
 	eh.log.Debug("login successful", zap.String("client_id", session.ClientId))
 
-	// TODO: notify via telegram
+	msg := tgbotapi.NewMessage(eh.chatID, "Successfully logged in")
+	if _, err := eh.telegramAPI.Send(msg); err != nil {
+		eh.log.Error("failed to send message to telegram", zap.Error(err))
+	}
 }
 
 func (eh *EventsHandler) handleTextMessage(event *domain.TextMessageEvent) {
