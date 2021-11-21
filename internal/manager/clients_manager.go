@@ -55,7 +55,7 @@ func (mgr *Manager) Run(ctx context.Context) {
 			case *domain.StartEvent:
 				// Check if client already exists
 				if _, ok := mgr.eventHandlers[e.ChatID]; ok {
-					return
+					continue
 				}
 
 				// Create and run events handler for new client
@@ -72,17 +72,22 @@ func (mgr *Manager) Run(ctx context.Context) {
 				handlerCh <- e
 			case *domain.LoginEvent:
 				// TODO: check if the client is already logged in
-				// TODO: delegate the event to the event handler of the client
 				handlerCh, ok := mgr.eventHandlers[e.ChatID]
 				if !ok {
-					// TODO: handle error
+					mgr.log.Error("failed to find events handler for the chat_id",
+						zap.Int64("chat_id", e.ChatID))
+
+					continue
 				}
 
 				handlerCh <- event
 			case *domain.ReplyEvent:
 				handlerCh, ok := mgr.eventHandlers[e.ChatID]
 				if !ok {
-					// TODO: handle error
+					mgr.log.Error("failed to find events handler for the chat_id",
+						zap.Int64("chat_id", e.ChatID))
+
+					continue
 				}
 
 				handlerCh <- event
