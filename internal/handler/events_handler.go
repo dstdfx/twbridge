@@ -165,7 +165,11 @@ func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
 	session, err := wac.Login(qr)
 	if err != nil {
 		eh.log.Error("failed to login to whatsapp", zap.Error(err))
-		// TODO: handle qr scan timeout
+
+		msg := tgbotapi.NewMessage(eh.chatID, "QR-code scanning timed out, let's try again, type /login")
+		if _, err := eh.telegramAPI.Send(msg); err != nil {
+			eh.log.Error("failed to send message to telegram", zap.Error(err))
+		}
 
 		return
 	}
