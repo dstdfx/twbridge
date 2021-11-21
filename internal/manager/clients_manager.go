@@ -79,6 +79,13 @@ func (mgr *Manager) Run(ctx context.Context) {
 				}
 
 				handlerCh <- event
+			case *domain.ReplyEvent:
+				handlerCh, ok := mgr.eventHandlers[e.ChatID]
+				if !ok {
+					// TODO: handle error
+				}
+
+				handlerCh <- event
 			}
 		}
 	}

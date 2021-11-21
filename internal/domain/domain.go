@@ -68,7 +68,8 @@ type ReplyEvent struct {
 	// Reply is a reply text message body.
 	Reply string
 
-	// TODO: add some identifier to know whom to reply
+	// RemoteJid is a whatsapp user identifier.
+	RemoteJid string
 }
 
 func (re *ReplyEvent) Type() EventType {
@@ -90,4 +91,5 @@ type WhatsappContact struct {
 type WhatsappClient interface {
 	Restore() error
 	GetContacts() map[string]WhatsappContact
+	Send(interface{}) error
 }

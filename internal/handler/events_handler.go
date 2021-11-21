@@ -22,8 +22,7 @@ const (
 
 	defaultQRCodePNGSize = 256
 
-	textMessageFmt = `From: %s
-Jid: %s
+	textMessageFmt = `From: %s [jid: %s]
 = = = = = = = = = = = =
 Message: %s`
 )
@@ -79,6 +78,8 @@ func (eh *EventsHandler) Run(ctx context.Context) {
 				eh.handleLoginEvent(e)
 			case *domain.TextMessageEvent:
 				eh.handleTextMessage(e)
+			case *domain.ReplyEvent:
+				eh.handleReplyEvent(e)
 			}
 		}
 	}
@@ -195,5 +196,25 @@ func (eh *EventsHandler) handleTextMessage(event *domain.TextMessageEvent) {
 	msg := tgbotapi.NewMessage(eh.chatID, textMessageTemplate)
 	if _, err := eh.telegramAPI.Send(msg); err != nil {
 		eh.log.Error("failed to send message to telegram", zap.Error(err))
+	}
+}
+
+func (eh *EventsHandler) handleReplyEvent(event *domain.ReplyEvent) {
+	eh.log.Debug("reply to a message",
+		zap.Int64("chat_id", event.ChatID),
+		zap.String("remote_jid", event.RemoteJid))
+
+	text := whatsapp.TextMessage{
+		Info: whatsapp.MessageInfo{
+			RemoteJid: event.RemoteJid,
+		},
+		Text: event.Reply,
+	}
+
+	if err := eh.whatsappClient.Send(text); err != nil {
+		eh.log.Error("failed to send message",
+			zap.Error(err),
+			zap.Int64("chat_id", event.ChatID),
+			zap.String("remote_jid", event.RemoteJid))
 	}
 }
