@@ -113,4 +113,51 @@ func TestEventsProvider(t *testing.T) {
 		eventsCh := eventsProvider.EventsStream()
 		assert.Len(t, eventsCh, 0)
 	})
+
+	t.Run("reply event", func(t *testing.T) {
+		wg := &sync.WaitGroup{}
+		wg.Add(1)
+
+		var gotEvent domain.Event
+		go func() {
+			defer wg.Done()
+			gotEvent = <-eventsProvider.EventsStream()
+		}()
+
+		// Emulate telegram update message
+		testUpdate := tgbotapi.Update{
+			UpdateID: 2,
+			Message: &tgbotapi.Message{
+				MessageID: 2,
+				From: &tgbotapi.User{
+					FirstName: "test name",
+					LastName:  "test surname",
+					UserName:  "testuser",
+				},
+				Chat: &tgbotapi.Chat{
+					ID: 42,
+				},
+				Text: "reply to a message",
+				ReplyToMessage: &tgbotapi.Message{
+					MessageID: 1,
+					Chat: &tgbotapi.Chat{
+						ID: 42,
+					},
+					Text: "From: Username Surename [jid: example@mail.com]\n==========\nMessage: Hello, world!",
+				},
+			},
+		}
+		tgUpdatesCh <- testUpdate
+
+		// Wait for the event to be processed
+		wg.Wait()
+
+		assert.Equal(t, domain.ReplyEventType, gotEvent.Type())
+		gotReplyEvent := gotEvent.(*domain.ReplyEvent)
+
+		assert.Equal(t, testUpdate.Message.Chat.ID, gotReplyEvent.ChatID)
+		assert.Equal(t, testUpdate.Message.From.UserName, gotReplyEvent.FromUser)
+		assert.Equal(t, "example@mail.com", gotReplyEvent.RemoteJid)
+		assert.Equal(t, testUpdate.Message.Text, gotReplyEvent.Reply)
+	})
 }

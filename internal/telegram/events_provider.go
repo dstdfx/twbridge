@@ -61,12 +61,6 @@ func (ep *EventsProvider) Run(ctx context.Context) error {
 				}
 			default:
 				if update.Message.ReplyToMessage != nil {
-					ep.log.Info("got reply to a message",
-						zap.Int64("chat_id", update.Message.Chat.ID),
-						zap.String("username", update.Message.From.UserName),
-						zap.String("text", update.Message.Text),
-						zap.String("reply_to", update.Message.ReplyToMessage.Text))
-
 					// Extract jid from the message that is replied to
 					jidStart := strings.Index(update.Message.ReplyToMessage.Text, "jid:")
 					jidEnd := strings.Index(update.Message.ReplyToMessage.Text, "]")
