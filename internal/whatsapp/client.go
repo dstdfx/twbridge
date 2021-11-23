@@ -1,6 +1,8 @@
 package whatsapp
 
 import (
+	"fmt"
+
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/dstdfx/twbridge/internal/domain"
 )
@@ -38,8 +40,22 @@ func (c *Client) GetContacts() map[string]domain.WhatsappContact {
 }
 
 // Send method sends data via whatsapp client.
-func (c *Client) Send(msg interface{}) (err error) {
-	_, err = c.wc.Send(msg)
+func (c *Client) Send(msg domain.WhatsappMessage) (err error) {
+	var whatsappMessage interface{}
+	switch msg.Type() {
+	case domain.WhatsappTextMessageType:
+		textMessage := msg.(*domain.WhatsappTextMessage)
+		whatsappMessage = whatsapp.TextMessage{
+			Info: whatsapp.MessageInfo{
+				RemoteJid: textMessage.RemoteJid,
+			},
+			Text: textMessage.Text,
+		}
+	default:
+		return fmt.Errorf("got unsupported message type: %s", msg.Type())
+	}
+
+	_, err = c.wc.Send(whatsappMessage)
 
 	return
 }

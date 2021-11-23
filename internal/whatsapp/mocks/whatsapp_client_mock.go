@@ -42,13 +42,13 @@ func (_m *WhatsappClient) Restore() error {
 	return r0
 }
 
-// Send provides a mock function with given fields: _a0
-func (_m *WhatsappClient) Send(_a0 interface{}) error {
-	ret := _m.Called(_a0)
+// Send provides a mock function with given fields: msg
+func (_m *WhatsappClient) Send(msg domain.WhatsappMessage) error {
+	ret := _m.Called(msg)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(interface{}) error); ok {
-		r0 = rf(_a0)
+	if rf, ok := ret.Get(0).(func(domain.WhatsappMessage) error); ok {
+		r0 = rf(msg)
 	} else {
 		r0 = ret.Error(0)
 	}

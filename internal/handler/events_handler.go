@@ -204,14 +204,12 @@ func (eh *EventsHandler) handleReplyEvent(event *domain.ReplyEvent) {
 		zap.Int64("chat_id", event.ChatID),
 		zap.String("remote_jid", event.RemoteJid))
 
-	text := whatsapp.TextMessage{
-		Info: whatsapp.MessageInfo{
-			RemoteJid: event.RemoteJid,
-		},
-		Text: event.Reply,
+	msg := &domain.WhatsappTextMessage{
+		RemoteJid: event.RemoteJid,
+		Text:      event.Reply,
 	}
 
-	if err := eh.whatsappClient.Send(text); err != nil {
+	if err := eh.whatsappClient.Send(msg); err != nil {
 		eh.log.Error("failed to send message",
 			zap.Error(err),
 			zap.Int64("chat_id", event.ChatID),

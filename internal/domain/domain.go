@@ -87,9 +87,33 @@ type WhatsappContact struct {
 	Name string
 }
 
+// WhatsappMessageType represents whatsapp message type.
+type WhatsappMessageType string
+
+const WhatsappTextMessageType = "text_message"
+
+// WhatsappMessage is an interface that represents whatsapp messages in general.
+type WhatsappMessage interface {
+	Type() WhatsappMessageType
+}
+
+// WhatsappTextMessage represents a whatsapp text message.
+type WhatsappTextMessage struct {
+	// RemoteJid is an identifier of a user the message is sent to.
+	RemoteJid string
+
+	// Text is a text of the message.
+	Text string
+}
+
+// Type method returns type of the message.
+func (msg *WhatsappTextMessage) Type() WhatsappMessageType {
+	return WhatsappTextMessageType
+}
+
 // WhatsappClient represents a common interface that describes whatsapp client behaviour.
 type WhatsappClient interface {
 	Restore() error
 	GetContacts() map[string]WhatsappContact
-	Send(interface{}) error
+	Send(msg WhatsappMessage) error
 }
