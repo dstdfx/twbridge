@@ -96,10 +96,10 @@ func TestEventsProvider(t *testing.T) {
 		wg.Wait()
 
 		assert.Equal(t, domain.LoginEventType, gotEvent.Type())
-		gotStartEvent := gotEvent.(*domain.LoginEvent)
+		gotLoginEvent := gotEvent.(*domain.LoginEvent)
 
-		assert.Equal(t, testUpdate.Message.Chat.ID, gotStartEvent.ChatID)
-		assert.Equal(t, testUpdate.Message.From.UserName, gotStartEvent.FromUser)
+		assert.Equal(t, testUpdate.Message.Chat.ID, gotLoginEvent.ChatID)
+		assert.Equal(t, testUpdate.Message.From.UserName, gotLoginEvent.FromUser)
 	})
 
 	t.Run("ignored message", func(t *testing.T) {
