@@ -56,7 +56,6 @@ func (wh *EventsProvider) HandleTextMessage(message whatsapp.TextMessage) {
 	}
 
 	wh.log.Debug("got text message",
-		zap.String("text", message.Text),
 		zap.Bool("from_me", message.Info.FromMe),
 		zap.Int("status", int(message.Info.Status)),
 		zap.String("push_name", message.Info.PushName),

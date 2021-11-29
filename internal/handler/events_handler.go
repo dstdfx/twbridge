@@ -185,8 +185,7 @@ func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
 
 func (eh *EventsHandler) handleTextMessage(event *domain.TextMessageEvent) {
 	eh.log.Debug("handle text message event",
-		zap.String("remote_jid", event.WhatsappRemoteJid),
-		zap.String("sender_name", event.WhatsappSenderName))
+		zap.String("remote_jid", event.WhatsappRemoteJid))
 
 	textMessageTemplate := fmt.Sprintf(textMessageFmt,
 		event.WhatsappSenderName,
