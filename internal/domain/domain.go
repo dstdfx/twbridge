@@ -1,5 +1,9 @@
 package domain
 
+// TextMessageFmt represents a message format that will be sent to a user in
+// case incoming text messages from whatsapp.
+const TextMessageFmt = "From: %s [jid: %s] \n= = = = = = = = = = = =\nMessage: %s"
+
 // EventType represents an event type.
 type EventType string
 

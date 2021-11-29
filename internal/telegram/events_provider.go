@@ -2,7 +2,6 @@ package telegram
 
 import (
 	"context"
-	"strings"
 
 	"github.com/dstdfx/twbridge/internal/domain"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -62,17 +61,17 @@ func (ep *EventsProvider) Run(ctx context.Context) error {
 			default:
 				if update.Message.ReplyToMessage != nil {
 					// Extract jid from the message that is replied to
-					jidStart := strings.Index(update.Message.ReplyToMessage.Text, "jid:")
-					jidEnd := strings.Index(update.Message.ReplyToMessage.Text, "]")
+					remoteJid := domain.ExtractMsgJid(update.Message.ReplyToMessage.Text)
+					if remoteJid == "" {
+						continue
+					}
 
-					// TODO: check borders properly
-					if jidStart != -1 && jidEnd != -1 && jidStart < jidEnd {
-						ep.eventsCh <- &domain.ReplyEvent{
-							ChatID:    update.Message.Chat.ID,
-							FromUser:  update.Message.From.UserName,
-							Reply:     update.Message.Text,
-							RemoteJid: update.Message.ReplyToMessage.Text[jidStart+5 : jidEnd],
-						}
+					// Send reply event
+					ep.eventsCh <- &domain.ReplyEvent{
+						ChatID:    update.Message.Chat.ID,
+						FromUser:  update.Message.From.UserName,
+						Reply:     update.Message.Text,
+						RemoteJid: remoteJid,
 					}
 				}
 			}

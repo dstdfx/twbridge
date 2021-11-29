@@ -21,10 +21,6 @@ const (
 	defaultWhatsappConnTimeout        = 20 * time.Second
 
 	defaultQRCodePNGSize = 256
-
-	textMessageFmt = `From: %s [jid: %s]
-= = = = = = = = = = = =
-Message: %s`
 )
 
 // EventsHandler represents entity that handles events from telegram and whatsapp
@@ -187,7 +183,7 @@ func (eh *EventsHandler) handleTextMessage(event *domain.TextMessageEvent) {
 	eh.log.Debug("handle text message event",
 		zap.String("remote_jid", event.WhatsappRemoteJid))
 
-	textMessageTemplate := fmt.Sprintf(textMessageFmt,
+	textMessageTemplate := fmt.Sprintf(domain.TextMessageFmt,
 		event.WhatsappSenderName,
 		event.WhatsappRemoteJid,
 		event.Text)
