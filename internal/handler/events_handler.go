@@ -2,7 +2,6 @@ package handler
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"time"
 
@@ -38,8 +37,8 @@ type Opts struct {
 	// ChatID is telegram bot chat identifier.
 	ChatID int64
 
-	// IncomingEvents is a channel to receive events from.
-	IncomingEvents chan domain.Event
+	// WhatsappProviderEvents is a channel to send events from whatsapp provider.
+	WhatsappProviderEvents chan domain.Event
 
 	// TelegramAPI is a client to interact with telegram API.
 	TelegramAPI *tgbotapi.BotAPI
@@ -50,74 +49,13 @@ func NewEventsHandler(log *zap.Logger, opts *Opts) *EventsHandler {
 	return &EventsHandler{
 		log:         log,
 		chatID:      opts.ChatID,
-		eventsCh:    opts.IncomingEvents,
+		eventsCh:    opts.WhatsappProviderEvents,
 		telegramAPI: opts.TelegramAPI,
-	}
-}
-
-// Run method starts the main goroutine of EventsHandler.
-// The call is blocking.
-func (eh *EventsHandler) Run(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case event, ok := <-eh.eventsCh:
-			if !ok {
-				return
-			}
-
-			if err := eh.handle(event); err != nil {
-				eh.log.Error("failed to handle event", zap.Error(err))
-			}
-		}
-	}
-}
-
-func (eh *EventsHandler) handle(event domain.Event) error {
-	switch e := event.(type) {
-	case *domain.StartEvent:
-		return eh.HandleStartEvent(e)
-	case *domain.LoginEvent:
-		return eh.HandleLoginEvent(e)
-	case *domain.TextMessageEvent:
-		return eh.HandleTextMessageEvent(e)
-	case *domain.ReplyEvent:
-		return eh.HandleReplyEvent(e)
-	default:
-		return fmt.Errorf("got unknown event type: %s", event)
 	}
 }
 
 // HandleStartEvent method handles start event.
 func (eh *EventsHandler) HandleStartEvent(event *domain.StartEvent) error {
-	eh.handleStartEvent(event)
-
-	return nil
-}
-
-// HandleLoginEvent method handles login event.
-func (eh *EventsHandler) HandleLoginEvent(event *domain.LoginEvent) error {
-	eh.handleLoginEvent(event)
-
-	return nil
-}
-
-// HandleTextMessageEvent method handles text message event.
-func (eh *EventsHandler) HandleTextMessageEvent(event *domain.TextMessageEvent) error {
-	eh.handleTextMessage(event)
-
-	return nil
-}
-
-// HandleReplyEvent method handles reply event.
-func (eh *EventsHandler) HandleReplyEvent(event *domain.ReplyEvent) error {
-	eh.handleReplyEvent(event)
-
-	return nil
-}
-
-func (eh *EventsHandler) handleStartEvent(event *domain.StartEvent) {
 	eh.log.Debug("handle start",
 		zap.String("username", event.FromUser),
 		zap.Int64("chat_id", event.ChatID))
@@ -129,11 +67,14 @@ func (eh *EventsHandler) handleStartEvent(event *domain.StartEvent) {
 	`)
 
 	if _, err := eh.telegramAPI.Send(msg); err != nil {
-		eh.log.Error("failed to send start message to telegram", zap.Error(err))
+		return fmt.Errorf("failed to send start message to telegram: %w", err)
 	}
+
+	return nil
 }
 
-func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
+// HandleLoginEvent method handles login event.
+func (eh *EventsHandler) HandleLoginEvent(event *domain.LoginEvent) error {
 	eh.log.Debug("handle whatsapp login",
 		zap.String("username", event.FromUser),
 		zap.Int64("chat_id", event.ChatID))
@@ -142,9 +83,7 @@ func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
 		Timeout: defaultWhatsappConnTimeout,
 	})
 	if err != nil {
-		eh.log.Error("failed to establish new whatsapp connection", zap.Error(err))
-
-		return
+		return fmt.Errorf("failed to establish new whatsapp connection: %w", err)
 	}
 
 	// Initialize new whatsapp client
@@ -152,6 +91,7 @@ func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
 
 	// Initialize whatsapp events provider
 	waHandler := whatsappevents.NewEventsProvider(eh.log, &whatsappevents.Opts{
+		ChatID: eh.chatID,
 		OutgoingEvents: eh.eventsCh,
 		WhatsappClient: eh.whatsappClient,
 	})
@@ -197,25 +137,27 @@ func (eh *EventsHandler) handleLoginEvent(event *domain.LoginEvent) {
 
 	session, err := wac.Login(qr)
 	if err != nil {
-		eh.log.Error("failed to login to whatsapp", zap.Error(err))
-
+		// TODO: move to a separate error handling fn
 		msg := tgbotapi.NewMessage(eh.chatID, "QR-code scanning timed out, let's try again, type /login")
 		if _, err := eh.telegramAPI.Send(msg); err != nil {
 			eh.log.Error("failed to send message to telegram", zap.Error(err))
 		}
 
-		return
+		return fmt.Errorf("failed to login to whatsapp: %w", err)
 	}
 
 	eh.log.Debug("login successful", zap.String("client_id", session.ClientId))
 
 	msg := tgbotapi.NewMessage(eh.chatID, "Successfully logged in")
 	if _, err := eh.telegramAPI.Send(msg); err != nil {
-		eh.log.Error("failed to send message to telegram", zap.Error(err))
+		return fmt.Errorf("failed to send message to telegram: %w", err)
 	}
+
+	return nil
 }
 
-func (eh *EventsHandler) handleTextMessage(event *domain.TextMessageEvent) {
+// HandleTextMessageEvent method handles text message event.
+func (eh *EventsHandler) HandleTextMessageEvent(event *domain.TextMessageEvent) error {
 	eh.log.Debug("handle text message event",
 		zap.String("remote_jid", event.WhatsappRemoteJid))
 
@@ -226,11 +168,14 @@ func (eh *EventsHandler) handleTextMessage(event *domain.TextMessageEvent) {
 
 	msg := tgbotapi.NewMessage(eh.chatID, textMessageTemplate)
 	if _, err := eh.telegramAPI.Send(msg); err != nil {
-		eh.log.Error("failed to send message to telegram", zap.Error(err))
+		return fmt.Errorf("failed to send message to telegram: %w", err)
 	}
+
+	return nil
 }
 
-func (eh *EventsHandler) handleReplyEvent(event *domain.ReplyEvent) {
+// HandleReplyEvent method handles reply event.
+func (eh *EventsHandler) HandleReplyEvent(event *domain.ReplyEvent) error {
 	eh.log.Debug("reply to a message",
 		zap.Int64("chat_id", event.ChatID),
 		zap.String("remote_jid", event.RemoteJid))
@@ -241,9 +186,11 @@ func (eh *EventsHandler) handleReplyEvent(event *domain.ReplyEvent) {
 	}
 
 	if err := eh.whatsappClient.Send(msg); err != nil {
-		eh.log.Error("failed to send message",
-			zap.Error(err),
-			zap.Int64("chat_id", event.ChatID),
-			zap.String("remote_jid", event.RemoteJid))
+		return fmt.Errorf("failed to send message chat_id=%d remote_jid=%s: %w",
+			event.ChatID,
+			event.RemoteJid,
+			err)
 	}
+
+	return nil
 }
