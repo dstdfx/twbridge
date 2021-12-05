@@ -67,18 +67,54 @@ func (eh *EventsHandler) Run(ctx context.Context) {
 				return
 			}
 
-			switch e := event.(type) {
-			case *domain.StartEvent:
-				eh.handleStartEvent(e)
-			case *domain.LoginEvent:
-				eh.handleLoginEvent(e)
-			case *domain.TextMessageEvent:
-				eh.handleTextMessage(e)
-			case *domain.ReplyEvent:
-				eh.handleReplyEvent(e)
+			if err := eh.handle(event); err != nil {
+				eh.log.Error("failed to handle event", zap.Error(err))
 			}
 		}
 	}
+}
+
+func (eh *EventsHandler) handle(event domain.Event) error {
+	switch e := event.(type) {
+	case *domain.StartEvent:
+		return eh.HandleStartEvent(e)
+	case *domain.LoginEvent:
+		return eh.HandleLoginEvent(e)
+	case *domain.TextMessageEvent:
+		return eh.HandleTextMessageEvent(e)
+	case *domain.ReplyEvent:
+		return eh.HandleReplyEvent(e)
+	default:
+		return fmt.Errorf("got unknown event type: %s", event)
+	}
+}
+
+// HandleStartEvent method handles start event.
+func (eh *EventsHandler) HandleStartEvent(event *domain.StartEvent) error {
+	eh.handleStartEvent(event)
+
+	return nil
+}
+
+// HandleLoginEvent method handles login event.
+func (eh *EventsHandler) HandleLoginEvent(event *domain.LoginEvent) error {
+	eh.handleLoginEvent(event)
+
+	return nil
+}
+
+// HandleTextMessageEvent method handles text message event.
+func (eh *EventsHandler) HandleTextMessageEvent(event *domain.TextMessageEvent) error {
+	eh.handleTextMessage(event)
+
+	return nil
+}
+
+// HandleReplyEvent method handles reply event.
+func (eh *EventsHandler) HandleReplyEvent(event *domain.ReplyEvent) error {
+	eh.handleReplyEvent(event)
+
+	return nil
 }
 
 func (eh *EventsHandler) handleStartEvent(event *domain.StartEvent) {

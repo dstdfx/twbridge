@@ -80,6 +80,14 @@ func (re *ReplyEvent) Type() EventType {
 	return ReplyEventType
 }
 
+// EventsHandler describes events handler API.
+type EventsHandler interface {
+	HandleStartEvent(*StartEvent) error
+	HandleLoginEvent(*LoginEvent) error
+	HandleTextMessageEvent(*TextMessageEvent) error
+	HandleReplyEvent(*ReplyEvent) error
+}
+
 /* Whatsapp related domain entities */
 
 // WhatsappContact represents whatsapp contact.
