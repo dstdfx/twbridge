@@ -13,15 +13,15 @@ import (
 // and existing clients of the bot.
 type Manager struct {
 	log            *zap.Logger
-	incomingEvents <-chan domain.Event
+	incomingEvents chan domain.Event
 	telegramAPI    *tgbotapi.BotAPI
-	eventHandlers  map[int64]chan<- domain.Event
+	eventHandlers map[int64]domain.EventsHandler
 }
 
 // Opts represents options to create new instance of Manager.
 type Opts struct {
 	// IncomingEvents is a channel to receive events from.
-	IncomingEvents <-chan domain.Event
+	IncomingEvents chan domain.Event
 
 	// TelegramAPI is a client to interact with telegram API.
 	TelegramAPI *tgbotapi.BotAPI
@@ -32,7 +32,7 @@ func NewManager(log *zap.Logger, opts *Opts) *Manager {
 	return &Manager{
 		log:            log,
 		incomingEvents: opts.IncomingEvents,
-		eventHandlers:  make(map[int64]chan<- domain.Event),
+		eventHandlers:  make(map[int64]domain.EventsHandler),
 		telegramAPI:    opts.TelegramAPI,
 	}
 }
@@ -58,21 +58,20 @@ func (mgr *Manager) Run(ctx context.Context) {
 					continue
 				}
 
-				// Create and run events handler for new client
-				handlerCh := make(chan domain.Event, 1)
-				evHandler := handler.NewEventsHandler(mgr.log, &handler.Opts{
-					ChatID:         e.ChatID,
-					IncomingEvents: handlerCh,
-					TelegramAPI:    mgr.telegramAPI,
+				// Create events handler for new client and handle event
+				eventsHandler := handler.NewEventsHandler(mgr.log, &handler.Opts{
+					ChatID:                 e.ChatID,
+					WhatsappProviderEvents: mgr.incomingEvents,
+					TelegramAPI:            mgr.telegramAPI,
 				})
-				go evHandler.Run(ctx)
 
-				// Update mapping and send the event to the newly created handler
-				mgr.eventHandlers[e.ChatID] = handlerCh
-				handlerCh <- e
+				mgr.eventHandlers[e.ChatID] = eventsHandler
+				if err := eventsHandler.HandleStartEvent(e); err != nil {
+					mgr.log.Error("failed to handle start event", zap.Error(err))
+				}
 			case *domain.LoginEvent:
 				// TODO: check if the client is already logged in
-				handlerCh, ok := mgr.eventHandlers[e.ChatID]
+				eventsHandler, ok := mgr.eventHandlers[e.ChatID]
 				if !ok {
 					mgr.log.Error("failed to find events handler for the chat_id",
 						zap.Int64("chat_id", e.ChatID))
@@ -80,9 +79,12 @@ func (mgr *Manager) Run(ctx context.Context) {
 					continue
 				}
 
-				handlerCh <- event
+				if err := eventsHandler.HandleLoginEvent(e); err != nil {
+					mgr.log.Error("failed to handle login event", zap.Error(err))
+				}
+
 			case *domain.ReplyEvent:
-				handlerCh, ok := mgr.eventHandlers[e.ChatID]
+				eventsHandler, ok := mgr.eventHandlers[e.ChatID]
 				if !ok {
 					mgr.log.Error("failed to find events handler for the chat_id",
 						zap.Int64("chat_id", e.ChatID))
@@ -90,7 +92,21 @@ func (mgr *Manager) Run(ctx context.Context) {
 					continue
 				}
 
-				handlerCh <- event
+				if err := eventsHandler.HandleReplyEvent(e); err != nil {
+					mgr.log.Error("failed to handle reply event", zap.Error(err))
+				}
+			case *domain.TextMessageEvent:
+				eventsHandler, ok := mgr.eventHandlers[e.ChatID]
+				if !ok {
+					mgr.log.Error("failed to find events handler for the chat_id",
+						zap.Int64("chat_id", e.ChatID))
+
+					continue
+				}
+
+				if err := eventsHandler.HandleTextMessageEvent(e); err != nil {
+					mgr.log.Error("failed to handle text message event", zap.Error(err))
+				}
 			}
 		}
 	}

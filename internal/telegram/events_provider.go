@@ -80,6 +80,6 @@ func (ep *EventsProvider) Run(ctx context.Context) error {
 }
 
 // EventsStream method returns a stream of domain.Event.
-func (ep *EventsProvider) EventsStream() <-chan domain.Event {
+func (ep *EventsProvider) EventsStream() chan domain.Event {
 	return ep.eventsCh
 }
