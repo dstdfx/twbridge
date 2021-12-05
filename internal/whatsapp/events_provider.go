@@ -11,13 +11,17 @@ import (
 // EventsProvider represents whatsapp events provider.
 type EventsProvider struct {
 	log            *zap.Logger
+	startAt        int64
+	chatID         int64
 	whatsappClient domain.WhatsappClient
 	outgoingEvents chan domain.Event
-	startAt        int64
 }
 
 // Opts represents options to create new instance of EventsProvider.
 type Opts struct {
+	// ChatID is identifier of telegram chat.
+	ChatID int64
+
 	// OutgoingEvents is a channel to send events to.
 	OutgoingEvents chan domain.Event
 
@@ -29,6 +33,7 @@ type Opts struct {
 func NewEventsProvider(log *zap.Logger, opts *Opts) *EventsProvider {
 	return &EventsProvider{
 		log:            log,
+		chatID:         opts.ChatID,
 		startAt:        time.Now().Unix(),
 		outgoingEvents: opts.OutgoingEvents,
 		whatsappClient: opts.WhatsappClient,
@@ -79,6 +84,7 @@ func (wh *EventsProvider) HandleTextMessage(message whatsapp.TextMessage) {
 		WhatsappRemoteJid:  message.Info.RemoteJid,
 		WhatsappSenderName: contactName,
 		Text:               message.Text,
+		ChatID:             wh.chatID,
 	}:
 	default:
 	}

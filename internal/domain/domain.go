@@ -47,6 +47,9 @@ func (le *LoginEvent) Type() EventType {
 
 // TextMessageEvent represents an incoming text message event.
 type TextMessageEvent struct {
+	// ChatID is telegram bot chat identifier.
+	ChatID int64
+
 	// WhatsappRemoteJid is a whatsapp client identifier that sent the message.
 	WhatsappRemoteJid string
 

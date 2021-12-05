@@ -15,6 +15,8 @@ import (
 )
 
 func TestEventsProvider(t *testing.T) {
+	testChatID := int64(123)
+
 	t.Run("handle error", func(t *testing.T) {
 		// Init test events provider
 		outgoingEvents := make(chan domain.Event, 1)
@@ -36,6 +38,7 @@ func TestEventsProvider(t *testing.T) {
 		outgoingEvents := make(chan domain.Event, 1)
 		whatsappClientMock := &mocks.WhatsappClient{}
 		eventsProvider := whatsapp.NewEventsProvider(zap.NewNop(), &whatsapp.Opts{
+			ChatID:         testChatID,
 			OutgoingEvents: outgoingEvents,
 			WhatsappClient: whatsappClientMock,
 		})
@@ -85,6 +88,7 @@ func TestEventsProvider(t *testing.T) {
 
 		// Check the event's content
 		gotTextEvent := gotEvent.(*domain.TextMessageEvent)
+		assert.Equal(t, testChatID, gotTextEvent.ChatID)
 		assert.Equal(t, testMessage.Text, gotTextEvent.Text)
 		assert.Equal(t, testMessage.Info.RemoteJid, gotTextEvent.WhatsappRemoteJid)
 		assert.Equal(t, contacts[testMessage.Info.RemoteJid].Name, gotTextEvent.WhatsappSenderName)
@@ -95,6 +99,7 @@ func TestEventsProvider(t *testing.T) {
 		outgoingEvents := make(chan domain.Event, 1)
 		whatsappClientMock := &mocks.WhatsappClient{}
 		eventsProvider := whatsapp.NewEventsProvider(zap.NewNop(), &whatsapp.Opts{
+			ChatID:         testChatID,
 			OutgoingEvents: outgoingEvents,
 			WhatsappClient: whatsappClientMock,
 		})
@@ -144,6 +149,7 @@ func TestEventsProvider(t *testing.T) {
 
 		// Check the event's content
 		gotTextEvent := gotEvent.(*domain.TextMessageEvent)
+		assert.Equal(t, testChatID, gotTextEvent.ChatID)
 		assert.Equal(t, testMessage.Text, gotTextEvent.Text)
 		assert.Equal(t, testMessage.Info.RemoteJid, gotTextEvent.WhatsappRemoteJid)
 		assert.Equal(t, "<unknown>", gotTextEvent.WhatsappSenderName)
