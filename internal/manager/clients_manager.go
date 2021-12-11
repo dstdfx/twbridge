@@ -15,7 +15,7 @@ type Manager struct {
 	log            *zap.Logger
 	incomingEvents chan domain.Event
 	telegramAPI    *tgbotapi.BotAPI
-	eventHandlers map[int64]domain.EventsHandler
+	eventHandlers  map[int64]domain.EventsHandler
 }
 
 // Opts represents options to create new instance of Manager.
