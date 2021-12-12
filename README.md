@@ -3,7 +3,18 @@
 This repository contains an implementation of Telegram <-> Whatsapp bridge.  
 It allows you to receive incoming Whatsapp messages in Telegram chat and reply to them.
 
-## Requirements 
+## How it works
+
+All text messages that you receive in Whatsapp chats are being forwarded to Telegram chat with the bot.  
+Incoming text messages have the following format:
+```text
+From: Test User [jid: testuser@gmail.com]
+= = = = = = = = = = = =
+Message: hello, world!
+```
+Reply to a message can be done by simply [replying](https://telegram.org/blog/replies-mentions-hashtags#replies) to a specific message.
+
+## Requirements
 
 To run this app you need a Telegram bot created, check [this manual](https://core.telegram.org/bots#3-how-do-i-create-a-bot)
 if you've never done it before.  
