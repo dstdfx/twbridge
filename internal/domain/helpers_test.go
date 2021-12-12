@@ -9,36 +9,36 @@ import (
 )
 
 func TestExtractMsgJid(t *testing.T) {
-	tableTest := []struct{
-		input string
+	tableTest := []struct {
+		input    string
 		expected string
 	}{
 		{
-			input: "",
+			input:    "",
 			expected: "",
 		},
 		{
-			input: fmt.Sprintf(domain.TextMessageFmt, "test user", "test@jid.net", "hello, world!"),
+			input:    fmt.Sprintf(domain.TextMessageFmt, "test user", "test@jid.net", "hello, world!"),
 			expected: "test@jid.net",
 		},
 		{
-			input: "[jid:]",
+			input:    "[jid:]",
 			expected: "",
 		},
 		{
-			input: "][jid:]",
+			input:    "][jid:]",
 			expected: "",
 		},
 		{
-			input: "jid: ",
+			input:    "jid: ",
 			expected: "",
 		},
 		{
-			input: "[jid: dasd@asdsad.com",
+			input:    "[jid: dasd@asdsad.com",
 			expected: "",
 		},
 		{
-			input: "ewfwefwef",
+			input:    "ewfwefwef",
 			expected: "",
 		},
 	}

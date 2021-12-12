@@ -91,7 +91,7 @@ func (eh *EventsHandler) HandleLoginEvent(event *domain.LoginEvent) error {
 
 	// Initialize whatsapp events provider
 	waHandler := whatsappevents.NewEventsProvider(eh.log, &whatsappevents.Opts{
-		ChatID: eh.chatID,
+		ChatID:         eh.chatID,
 		OutgoingEvents: eh.eventsCh,
 		WhatsappClient: eh.whatsappClient,
 	})

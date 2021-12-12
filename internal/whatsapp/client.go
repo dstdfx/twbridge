@@ -1,11 +1,13 @@
 package whatsapp
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/dstdfx/twbridge/internal/domain"
 )
+
+var ErrUnsupportedMessageType = errors.New("got unsupported message type")
 
 // Client represents a whatsapp connection wrapper.
 type Client struct {
@@ -52,7 +54,7 @@ func (c *Client) Send(msg domain.WhatsappMessage) (err error) {
 			Text: textMessage.Text,
 		}
 	default:
-		return fmt.Errorf("got unsupported message type: %s", msg.Type())
+		return ErrUnsupportedMessageType
 	}
 
 	_, err = c.wc.Send(whatsappMessage)
