@@ -74,11 +74,18 @@ func (mgr *Manager) Run(ctx context.Context) {
 					mgr.log.Error("failed to handle start event", zap.Error(err))
 				}
 			case *domain.LoginEvent:
-				// TODO: check if the client is already logged in
 				eventsHandler, ok := mgr.eventHandlers[e.ChatID]
 				if !ok {
 					mgr.log.Error("failed to find events handler for the chat_id",
 						zap.Int64("chat_id", e.ChatID))
+
+					continue
+				}
+
+				if eventsHandler.IsLoggedIn() {
+					if err := eventsHandler.HandleRepeatedLoginEvent(e); err != nil {
+						mgr.log.Error("failed to handle repeated login event", zap.Error(err))
+					}
 
 					continue
 				}

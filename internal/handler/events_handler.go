@@ -3,6 +3,7 @@ package handler
 import (
 	"bytes"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/Rhymen/go-whatsapp"
@@ -34,11 +35,13 @@ So let's get it started.`
 // EventsHandler represents entity that handles events from telegram and whatsapp
 // event providers.
 type EventsHandler struct {
-	log            *zap.Logger
-	chatID         int64
-	eventsCh       chan domain.Event
-	telegramAPI    *tgbotapi.BotAPI
-	whatsappClient domain.WhatsappClient
+	log                *zap.Logger
+	chatID             int64
+	eventsCh           chan domain.Event
+	telegramAPI        *tgbotapi.BotAPI
+	whatsappClient     domain.WhatsappClient
+	mu                 sync.RWMutex
+	isWhatsAppLoggedIn bool
 }
 
 // Opts represents options to create new instance of EventsHandler.
@@ -61,6 +64,15 @@ func NewEventsHandler(log *zap.Logger, opts *Opts) *EventsHandler {
 		eventsCh:    opts.WhatsappProviderEvents,
 		telegramAPI: opts.TelegramAPI,
 	}
+}
+
+// IsLoggedIn method returns `true` if client is authenticated in WhatsApp, otherwise
+// returns `false`.
+func (eh *EventsHandler) IsLoggedIn() bool {
+	eh.mu.RLock()
+	defer eh.mu.RUnlock()
+
+	return eh.isWhatsAppLoggedIn
 }
 
 // HandleStartEvent method handles start event.
@@ -151,9 +163,27 @@ func (eh *EventsHandler) HandleLoginEvent(event *domain.LoginEvent) error {
 		return fmt.Errorf("failed to login to whatsapp: %w", err)
 	}
 
+	eh.mu.Lock()
+	eh.isWhatsAppLoggedIn = true
+	eh.mu.Unlock()
+
 	eh.log.Debug("login successful", zap.String("client_id", session.ClientId))
 
 	msg := tgbotapi.NewMessage(eh.chatID, "Successfully logged in")
+	if _, err := eh.telegramAPI.Send(msg); err != nil {
+		return fmt.Errorf("failed to send message to telegram: %w", err)
+	}
+
+	return nil
+}
+
+// HandleRepeatedLoginEvent method handles repeated login event.
+func (eh *EventsHandler) HandleRepeatedLoginEvent(event *domain.LoginEvent) error {
+	eh.log.Debug("handle repeated login event",
+		zap.String("username", event.FromUser),
+		zap.Int64("chat_id", event.ChatID))
+
+	msg := tgbotapi.NewMessage(eh.chatID, "Already logged in")
 	if _, err := eh.telegramAPI.Send(msg); err != nil {
 		return fmt.Errorf("failed to send message to telegram: %w", err)
 	}

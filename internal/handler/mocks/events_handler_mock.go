@@ -26,6 +26,20 @@ func (_m *EventsHandler) HandleLoginEvent(_a0 *domain.LoginEvent) error {
 	return r0
 }
 
+// HandleRepeatedLoginEvent provides a mock function with given fields: _a0
+func (_m *EventsHandler) HandleRepeatedLoginEvent(_a0 *domain.LoginEvent) error {
+	ret := _m.Called(_a0)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*domain.LoginEvent) error); ok {
+		r0 = rf(_a0)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // HandleReplyEvent provides a mock function with given fields: _a0
 func (_m *EventsHandler) HandleReplyEvent(_a0 *domain.ReplyEvent) error {
 	ret := _m.Called(_a0)
@@ -63,6 +77,20 @@ func (_m *EventsHandler) HandleTextMessageEvent(_a0 *domain.TextMessageEvent) er
 		r0 = rf(_a0)
 	} else {
 		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// IsLoggedIn provides a mock function with given fields:
+func (_m *EventsHandler) IsLoggedIn() bool {
+	ret := _m.Called()
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func() bool); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(bool)
 	}
 
 	return r0

@@ -87,8 +87,10 @@ func (re *ReplyEvent) Type() EventType {
 type EventsHandler interface {
 	HandleStartEvent(*StartEvent) error
 	HandleLoginEvent(*LoginEvent) error
+	HandleRepeatedLoginEvent(*LoginEvent) error
 	HandleTextMessageEvent(*TextMessageEvent) error
 	HandleReplyEvent(*ReplyEvent) error
+	IsLoggedIn() bool
 }
 
 /* Whatsapp related domain entities */

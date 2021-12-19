@@ -56,6 +56,7 @@ func TestManager(t *testing.T) {
 		})
 
 		eventsHandlerMock := &mocks.EventsHandler{}
+		eventsHandlerMock.On("IsLoggedIn").Return(false)
 		eventsHandlerMock.On("HandleLoginEvent", mock.Anything).Return(nil)
 
 		// Add test events handler
@@ -80,7 +81,44 @@ func TestManager(t *testing.T) {
 		cancel()
 		wg.Wait()
 
+		eventsHandlerMock.AssertCalled(t, "IsLoggedIn")
 		eventsHandlerMock.AssertCalled(t, "HandleLoginEvent", mock.Anything)
+	})
+
+	t.Run("handle repeated login event", func(t *testing.T) {
+		incomingEventsCh := make(chan domain.Event)
+		testMgr := NewManager(zap.NewNop(), &Opts{
+			IncomingEvents: incomingEventsCh,
+		})
+
+		eventsHandlerMock := &mocks.EventsHandler{}
+		eventsHandlerMock.On("IsLoggedIn").Return(true)
+		eventsHandlerMock.On("HandleRepeatedLoginEvent", mock.Anything).Return(nil)
+
+		// Add test events handler
+		testMgr.eventHandlers[testChatID] = eventsHandlerMock
+
+		// Run clients manager in a separate goroutine
+		ctx, cancel := context.WithCancel(context.Background())
+		wg := &sync.WaitGroup{}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			testMgr.Run(ctx)
+		}()
+
+		// Send login event
+		incomingEventsCh <- &domain.LoginEvent{
+			ChatID:   testChatID,
+			FromUser: testUserName,
+		}
+
+		// Stop clients manager
+		cancel()
+		wg.Wait()
+
+		eventsHandlerMock.AssertCalled(t, "IsLoggedIn")
+		eventsHandlerMock.AssertCalled(t, "HandleRepeatedLoginEvent", mock.Anything)
 	})
 
 	t.Run("handle reply event", func(t *testing.T) {
