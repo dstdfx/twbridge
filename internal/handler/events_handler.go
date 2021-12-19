@@ -22,6 +22,12 @@ const (
 	defaultQRCodePNGSize = 256
 )
 
+const startMsg = `Hi, this is Telegram<->WhatsApp bridge that allows you to receive your WhatsApp messages here and
+also reply to them.
+To start, you need to scan a QR-code that will appear here as soon as you click /login.
+Use WhatsApp application on your phone and scan it (Settings -> Linked Devices -> Link a Device).
+So click /login to get it started.`
+
 // EventsHandler represents entity that handles events from telegram and whatsapp
 // event providers.
 type EventsHandler struct {
@@ -60,11 +66,7 @@ func (eh *EventsHandler) HandleStartEvent(event *domain.StartEvent) error {
 		zap.String("username", event.FromUser),
 		zap.Int64("chat_id", event.ChatID))
 
-	msg := tgbotapi.NewMessage(event.ChatID, `
-		Hello, this is telegram<->whatsapp bridge that allows you to get your whatsapp messages here.
-		To start, you need to scan a QR code that will appear here with whatsapp application on your phone.
-		Type /login to begin.
-	`)
+	msg := tgbotapi.NewMessage(event.ChatID, startMsg)
 
 	if _, err := eh.telegramAPI.Send(msg); err != nil {
 		return fmt.Errorf("failed to send start message to telegram: %w", err)
