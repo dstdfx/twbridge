@@ -53,19 +53,23 @@ func (mgr *Manager) Run(ctx context.Context) {
 
 			switch e := event.(type) {
 			case *domain.StartEvent:
-				// Check if client already exists
-				if _, ok := mgr.eventHandlers[e.ChatID]; ok {
-					continue
+				var eventsHandler domain.EventsHandler
+
+				// Check if the client already has an events provider
+				eventsHandler, ok := mgr.eventHandlers[e.ChatID]
+				if !ok {
+					// Create events handler for new client and handle event
+					eventsHandler = handler.NewEventsHandler(mgr.log, &handler.Opts{
+						ChatID:                 e.ChatID,
+						WhatsappProviderEvents: mgr.incomingEvents,
+						TelegramAPI:            mgr.telegramAPI,
+					})
+
+					// Add it to the mapping
+					mgr.eventHandlers[e.ChatID] = eventsHandler
 				}
 
-				// Create events handler for new client and handle event
-				eventsHandler := handler.NewEventsHandler(mgr.log, &handler.Opts{
-					ChatID:                 e.ChatID,
-					WhatsappProviderEvents: mgr.incomingEvents,
-					TelegramAPI:            mgr.telegramAPI,
-				})
-
-				mgr.eventHandlers[e.ChatID] = eventsHandler
+				// Handle start event
 				if err := eventsHandler.HandleStartEvent(e); err != nil {
 					mgr.log.Error("failed to handle start event", zap.Error(err))
 				}

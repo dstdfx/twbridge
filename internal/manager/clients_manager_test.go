@@ -15,8 +15,38 @@ func TestManager(t *testing.T) {
 	testChatID := int64(123)
 	testUserName := "test-user"
 
-	t.Run("handle start event", func(t *testing.T) {
-		// TODO:
+	t.Run("handle start event, already has events handler", func(t *testing.T) {
+		incomingEventsCh := make(chan domain.Event)
+		testMgr := NewManager(zap.NewNop(), &Opts{
+			IncomingEvents: incomingEventsCh,
+		})
+
+		eventsHandlerMock := &mocks.EventsHandler{}
+		eventsHandlerMock.On("HandleStartEvent", mock.Anything).Return(nil)
+
+		// Add test events handler
+		testMgr.eventHandlers[testChatID] = eventsHandlerMock
+
+		// Run clients manager in a separate goroutine
+		ctx, cancel := context.WithCancel(context.Background())
+		wg := &sync.WaitGroup{}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			testMgr.Run(ctx)
+		}()
+
+		// Send login event
+		incomingEventsCh <- &domain.StartEvent{
+			ChatID:   testChatID,
+			FromUser: testUserName,
+		}
+
+		// Stop clients manager
+		cancel()
+		wg.Wait()
+
+		eventsHandlerMock.AssertCalled(t, "HandleStartEvent", mock.Anything)
 	})
 
 	t.Run("handle login event", func(t *testing.T) {
