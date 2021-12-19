@@ -22,11 +22,14 @@ const (
 	defaultQRCodePNGSize = 256
 )
 
-const startMsg = `Hi, this is Telegram<->WhatsApp bridge that allows you to receive your WhatsApp messages here and
-also reply to them.
-To start, you need to scan a QR-code that will appear here as soon as you click /login.
-Use WhatsApp application on your phone and scan it (Settings -> Linked Devices -> Link a Device).
-So click /login to get it started.`
+const startMsg = `
+Hi, this is Telegram<->WhatsApp bridge that allows you to receive your WhatsApp messages here and also reply to them.
+
+All you need is to scan a QR-code that will appear here after you click on /login.
+Use WhatsApp application on your phone to scan it (Settings -> Linked Devices -> Link a Device).
+This step is needed in order to authenticate you in WhatsApp.
+
+So let's get it started.`
 
 // EventsHandler represents entity that handles events from telegram and whatsapp
 // event providers.
