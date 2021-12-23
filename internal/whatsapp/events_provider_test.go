@@ -26,11 +26,8 @@ func TestEventsProvider(t *testing.T) {
 			WhatsappClient: whatsappClientMock,
 		})
 
-		whatsappClientMock.On("Restore").Once().Return(nil)
-
 		// Call method in order to emulate whatsapp event
 		eventsProvider.HandleError(errors.New("test error")) //nolint
-		whatsappClientMock.AssertCalled(t, "Restore")
 	})
 
 	t.Run("handle text message", func(t *testing.T) {
