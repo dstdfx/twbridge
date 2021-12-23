@@ -42,11 +42,12 @@ func NewEventsProvider(log *zap.Logger, opts *Opts) *EventsProvider {
 
 // HandleError method is called when error occurs.
 func (wh *EventsProvider) HandleError(err error) {
-	wh.log.Error("got error, trying to restore connection...", zap.Error(err))
+	wh.log.Error("got error", zap.Error(err))
 
-	if err := wh.whatsappClient.Restore(); err != nil {
-		wh.log.Error("failed to restore whatsapp connection", zap.Error(err))
-	}
+	// TODO: implement restoring from saved session
+	//if err := wh.whatsappClient.Restore(); err != nil {
+	//	wh.log.Error("failed to restore whatsapp connection", zap.Error(err))
+	//}
 }
 
 // ShouldCallSynchronously method indicates how whatsapp events should be handled.
