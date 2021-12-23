@@ -26,6 +26,9 @@ func (c *Client) Restore() error {
 
 // Logout method  invalidates the current whatsapp session.
 func (c *Client) Logout() error {
+	// We need to delete handlers in order to stop receiving updates from whatsapp.
+	c.wc.RemoveHandlers()
+
 	return c.wc.Logout()
 }
 
