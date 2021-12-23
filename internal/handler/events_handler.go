@@ -177,6 +177,28 @@ func (eh *EventsHandler) HandleLoginEvent(event *domain.LoginEvent) error {
 	return nil
 }
 
+// HandleLogoutEvent method handles repeated logout event.
+func (eh *EventsHandler) HandleLogoutEvent(event *domain.LogoutEvent) error {
+	eh.log.Debug("handle whatsapp logout",
+		zap.String("username", event.FromUser),
+		zap.Int64("chat_id", event.ChatID))
+
+	if err := eh.whatsappClient.Logout(); err != nil {
+		return fmt.Errorf("failed to logout: %w", err)
+	}
+
+	eh.mu.Lock()
+	eh.isWhatsAppLoggedIn = false
+	eh.mu.Unlock()
+
+	msg := tgbotapi.NewMessage(eh.chatID, "Successfully logged out")
+	if _, err := eh.telegramAPI.Send(msg); err != nil {
+		return fmt.Errorf("failed to send message to telegram: %w", err)
+	}
+
+	return nil
+}
+
 // HandleRepeatedLoginEvent method handles repeated login event.
 func (eh *EventsHandler) HandleRepeatedLoginEvent(event *domain.LoginEvent) error {
 	eh.log.Debug("handle repeated login event",

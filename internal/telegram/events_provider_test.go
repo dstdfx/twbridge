@@ -102,6 +102,44 @@ func TestEventsProvider(t *testing.T) {
 		assert.Equal(t, testUpdate.Message.From.UserName, gotLoginEvent.FromUser)
 	})
 
+	t.Run("logout event", func(t *testing.T) {
+		wg := &sync.WaitGroup{}
+		wg.Add(1)
+
+		var gotEvent domain.Event
+		go func() {
+			defer wg.Done()
+			gotEvent = <-eventsProvider.EventsStream()
+		}()
+
+		// Emulate telegram update message
+		testUpdate := tgbotapi.Update{
+			UpdateID: 1,
+			Message: &tgbotapi.Message{
+				MessageID: 1,
+				From: &tgbotapi.User{
+					FirstName: "test name",
+					LastName:  "test surname",
+					UserName:  "testuser",
+				},
+				Chat: &tgbotapi.Chat{
+					ID: 42,
+				},
+				Text: "/logout",
+			},
+		}
+		tgUpdatesCh <- testUpdate
+
+		// Wait for the event to be processed
+		wg.Wait()
+
+		assert.Equal(t, domain.LogoutEventType, gotEvent.Type())
+		gotLogoutEvent := gotEvent.(*domain.LogoutEvent)
+
+		assert.Equal(t, testUpdate.Message.Chat.ID, gotLogoutEvent.ChatID)
+		assert.Equal(t, testUpdate.Message.From.UserName, gotLogoutEvent.FromUser)
+	})
+
 	t.Run("ignored message", func(t *testing.T) {
 		// Emulate telegram update message that will be ignored
 		testUpdate := tgbotapi.Update{

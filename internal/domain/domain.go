@@ -10,6 +10,7 @@ type EventType string
 const (
 	StartEventType       EventType = "start"
 	LoginEventType       EventType = "login"
+	LogoutEventType      EventType = "logout"
 	TextMessageEventType EventType = "text_message" // whatsapp only
 	ReplyEventType       EventType = "reply"        // telegram only
 )
@@ -43,6 +44,19 @@ type LoginEvent struct {
 
 func (le *LoginEvent) Type() EventType {
 	return LoginEventType
+}
+
+// LogoutEvent represents a logout event.
+type LogoutEvent struct {
+	// ChatID is telegram bot chat identifier.
+	ChatID int64
+
+	// FromUser is a telegram username of the client that interacts with the bot.
+	FromUser string
+}
+
+func (lo *LogoutEvent) Type() EventType {
+	return LogoutEventType
 }
 
 // TextMessageEvent represents an incoming text message event.
@@ -87,6 +101,7 @@ func (re *ReplyEvent) Type() EventType {
 type EventsHandler interface {
 	HandleStartEvent(*StartEvent) error
 	HandleLoginEvent(*LoginEvent) error
+	HandleLogoutEvent(*LogoutEvent) error
 	HandleRepeatedLoginEvent(*LoginEvent) error
 	HandleTextMessageEvent(*TextMessageEvent) error
 	HandleReplyEvent(*ReplyEvent) error
@@ -133,4 +148,5 @@ type WhatsappClient interface {
 	Restore() error
 	GetContacts() map[string]WhatsappContact
 	Send(msg WhatsappMessage) error
+	Logout() error
 }

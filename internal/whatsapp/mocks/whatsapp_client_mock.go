@@ -28,6 +28,20 @@ func (_m *WhatsappClient) GetContacts() map[string]domain.WhatsappContact {
 	return r0
 }
 
+// Logout provides a mock function with given fields:
+func (_m *WhatsappClient) Logout() error {
+	ret := _m.Called()
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // Restore provides a mock function with given fields:
 func (_m *WhatsappClient) Restore() error {
 	ret := _m.Called()

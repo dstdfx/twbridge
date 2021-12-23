@@ -24,6 +24,11 @@ func (c *Client) Restore() error {
 	return c.wc.Restore()
 }
 
+// Logout method  invalidates the current whatsapp session.
+func (c *Client) Logout() error {
+	return c.wc.Logout()
+}
+
 // GetContacts method returns a list of whatsapp contacts.
 func (c *Client) GetContacts() map[string]domain.WhatsappContact {
 	if c.wc.Store == nil {

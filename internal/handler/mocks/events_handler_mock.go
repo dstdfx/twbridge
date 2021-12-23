@@ -26,6 +26,20 @@ func (_m *EventsHandler) HandleLoginEvent(_a0 *domain.LoginEvent) error {
 	return r0
 }
 
+// HandleLogout provides a mock function with given fields: _a0
+func (_m *EventsHandler) HandleLogoutEvent(_a0 *domain.LogoutEvent) error {
+	ret := _m.Called(_a0)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*domain.LogoutEvent) error); ok {
+		r0 = rf(_a0)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // HandleRepeatedLoginEvent provides a mock function with given fields: _a0
 func (_m *EventsHandler) HandleRepeatedLoginEvent(_a0 *domain.LoginEvent) error {
 	ret := _m.Called(_a0)

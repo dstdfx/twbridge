@@ -93,7 +93,23 @@ func (mgr *Manager) Run(ctx context.Context) {
 				if err := eventsHandler.HandleLoginEvent(e); err != nil {
 					mgr.log.Error("failed to handle login event", zap.Error(err))
 				}
+			case *domain.LogoutEvent:
+				eventsHandler, ok := mgr.eventHandlers[e.ChatID]
+				if !ok {
+					mgr.log.Error("failed to find events handler for the chat_id",
+						zap.Int64("chat_id", e.ChatID))
 
+					continue
+				}
+
+				// Skip if client is not logged in
+				if !eventsHandler.IsLoggedIn() {
+					continue
+				}
+
+				if err := eventsHandler.HandleLogoutEvent(e); err != nil {
+					mgr.log.Error("failed to handle logout event", zap.Error(err))
+				}
 			case *domain.ReplyEvent:
 				eventsHandler, ok := mgr.eventHandlers[e.ChatID]
 				if !ok {

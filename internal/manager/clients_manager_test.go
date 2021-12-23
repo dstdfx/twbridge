@@ -121,6 +121,76 @@ func TestManager(t *testing.T) {
 		eventsHandlerMock.AssertCalled(t, "HandleRepeatedLoginEvent", mock.Anything)
 	})
 
+	t.Run("handle logout event", func(t *testing.T) {
+		incomingEventsCh := make(chan domain.Event)
+		testMgr := NewManager(zap.NewNop(), &Opts{
+			IncomingEvents: incomingEventsCh,
+		})
+
+		eventsHandlerMock := &mocks.EventsHandler{}
+		eventsHandlerMock.On("IsLoggedIn").Return(true)
+		eventsHandlerMock.On("HandleLogoutEvent", mock.Anything).Return(nil)
+
+		// Add test events handler
+		testMgr.eventHandlers[testChatID] = eventsHandlerMock
+
+		// Run clients manager in a separate goroutine
+		ctx, cancel := context.WithCancel(context.Background())
+		wg := &sync.WaitGroup{}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			testMgr.Run(ctx)
+		}()
+
+		// Send login event
+		incomingEventsCh <- &domain.LogoutEvent{
+			ChatID:   testChatID,
+			FromUser: testUserName,
+		}
+
+		// Stop clients manager
+		cancel()
+		wg.Wait()
+
+		eventsHandlerMock.AssertCalled(t, "IsLoggedIn")
+		eventsHandlerMock.AssertCalled(t, "HandleLogoutEvent", mock.Anything)
+	})
+
+	t.Run("handle logout event, not logged in", func(t *testing.T) {
+		incomingEventsCh := make(chan domain.Event)
+		testMgr := NewManager(zap.NewNop(), &Opts{
+			IncomingEvents: incomingEventsCh,
+		})
+
+		eventsHandlerMock := &mocks.EventsHandler{}
+		eventsHandlerMock.On("IsLoggedIn").Return(false)
+
+		// Add test events handler
+		testMgr.eventHandlers[testChatID] = eventsHandlerMock
+
+		// Run clients manager in a separate goroutine
+		ctx, cancel := context.WithCancel(context.Background())
+		wg := &sync.WaitGroup{}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			testMgr.Run(ctx)
+		}()
+
+		// Send login event
+		incomingEventsCh <- &domain.LogoutEvent{
+			ChatID:   testChatID,
+			FromUser: testUserName,
+		}
+
+		// Stop clients manager
+		cancel()
+		wg.Wait()
+
+		eventsHandlerMock.AssertCalled(t, "IsLoggedIn")
+	})
+
 	t.Run("handle reply event", func(t *testing.T) {
 		incomingEventsCh := make(chan domain.Event)
 		testMgr := NewManager(zap.NewNop(), &Opts{
