@@ -81,10 +81,8 @@ func (eh *EventsHandler) HandleStartEvent(event *domain.StartEvent) error {
 		zap.String("username", event.FromUser),
 		zap.Int64("chat_id", event.ChatID))
 
-	msg := tgbotapi.NewMessage(event.ChatID, startMsg)
-
-	if _, err := eh.telegramAPI.Send(msg); err != nil {
-		return fmt.Errorf("failed to send start message to telegram: %w", err)
+	if err := eh.notifyTelegram(startMsg); err != nil {
+		return fmt.Errorf("failed to notify telegram: %w", err)
 	}
 
 	return nil
@@ -122,14 +120,14 @@ func (eh *EventsHandler) HandleLoginEvent(event *domain.LoginEvent) error {
 	go func() {
 		qrCode, err := qrcode.New(<-qr, qrcode.Low)
 		if err != nil {
-			eh.log.Error("failed to receive a QR code", zap.Error(err))
+			eh.log.Error("failed to receive QR-code", zap.Error(err))
 
 			return
 		}
 
 		rawCode, err := qrCode.PNG(defaultQRCodePNGSize)
 		if err != nil {
-			eh.log.Error("failed to parse QR code", zap.Error(err))
+			eh.log.Error("failed to parse QR-code", zap.Error(err))
 
 			return
 		}
@@ -140,24 +138,23 @@ func (eh *EventsHandler) HandleLoginEvent(event *domain.LoginEvent) error {
 			Size:   int64(len(rawCode)),
 		}
 
-		photo := tgbotapi.NewPhotoUpload(event.ChatID, qrCodeReader)
+		photo := tgbotapi.NewPhotoUpload(eh.chatID, qrCodeReader)
 		if _, err := eh.telegramAPI.Send(photo); err != nil {
-			eh.log.Error("failed to send new whatsapp connection", zap.Error(err))
+			eh.log.Error("failed to send QR-code", zap.Error(err))
 
 			return
 		}
 
-		eh.log.Debug("QR code has been sent")
+		eh.log.Debug("QR-code has been sent")
 	}()
 
 	// TODO: save and restore sessions
 
 	session, err := wac.Login(qr)
 	if err != nil {
-		// TODO: move to a separate error handling fn
-		msg := tgbotapi.NewMessage(eh.chatID, "QR-code scanning timed out, let's try again, type /login")
-		if _, err := eh.telegramAPI.Send(msg); err != nil {
-			eh.log.Error("failed to send message to telegram", zap.Error(err))
+		err := eh.notifyTelegram("QR-code scanning timed out, let's try again, type /login")
+		if err != nil {
+			return fmt.Errorf("failed to notify telegram: %w", err)
 		}
 
 		return fmt.Errorf("failed to login to whatsapp: %w", err)
@@ -169,9 +166,8 @@ func (eh *EventsHandler) HandleLoginEvent(event *domain.LoginEvent) error {
 
 	eh.log.Debug("login successful", zap.String("client_id", session.ClientId))
 
-	msg := tgbotapi.NewMessage(eh.chatID, "Successfully logged in")
-	if _, err := eh.telegramAPI.Send(msg); err != nil {
-		return fmt.Errorf("failed to send message to telegram: %w", err)
+	if err := eh.notifyTelegram("Successfully logged in"); err != nil {
+		return fmt.Errorf("failed to notify telegram: %w", err)
 	}
 
 	return nil
@@ -191,9 +187,8 @@ func (eh *EventsHandler) HandleLogoutEvent(event *domain.LogoutEvent) error {
 	eh.isWhatsAppLoggedIn = false
 	eh.mu.Unlock()
 
-	msg := tgbotapi.NewMessage(eh.chatID, "Successfully logged out")
-	if _, err := eh.telegramAPI.Send(msg); err != nil {
-		return fmt.Errorf("failed to send message to telegram: %w", err)
+	if err := eh.notifyTelegram("Successfully logged out"); err != nil {
+		return fmt.Errorf("failed to notify telegram: %w", err)
 	}
 
 	return nil
@@ -205,9 +200,8 @@ func (eh *EventsHandler) HandleRepeatedLoginEvent(event *domain.LoginEvent) erro
 		zap.String("username", event.FromUser),
 		zap.Int64("chat_id", event.ChatID))
 
-	msg := tgbotapi.NewMessage(eh.chatID, "Already logged in")
-	if _, err := eh.telegramAPI.Send(msg); err != nil {
-		return fmt.Errorf("failed to send message to telegram: %w", err)
+	if err := eh.notifyTelegram("Already logged in"); err != nil {
+		return fmt.Errorf("failed to notify telegram: %w", err)
 	}
 
 	return nil
@@ -223,9 +217,8 @@ func (eh *EventsHandler) HandleTextMessageEvent(event *domain.TextMessageEvent) 
 		event.WhatsappRemoteJid,
 		event.Text)
 
-	msg := tgbotapi.NewMessage(eh.chatID, textMessageTemplate)
-	if _, err := eh.telegramAPI.Send(msg); err != nil {
-		return fmt.Errorf("failed to send message to telegram: %w", err)
+	if err := eh.notifyTelegram(textMessageTemplate); err != nil {
+		return fmt.Errorf("failed to notify telegram: %w", err)
 	}
 
 	return nil
@@ -247,6 +240,14 @@ func (eh *EventsHandler) HandleReplyEvent(event *domain.ReplyEvent) error {
 			event.ChatID,
 			event.RemoteJid,
 			err)
+	}
+
+	return nil
+}
+
+func (eh *EventsHandler) notifyTelegram(msg string) error {
+	if _, err := eh.telegramAPI.Send(tgbotapi.NewMessage(eh.chatID, msg)); err != nil {
+		return fmt.Errorf("failed to send message to telegram: %w", err)
 	}
 
 	return nil
