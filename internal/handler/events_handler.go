@@ -32,6 +32,14 @@ This step is needed in order to authenticate you in WhatsApp.
 
 So let's get it started.`
 
+const helpMsg = `
+Supported commands:
+/start - prints starting message
+/login - establishes a session with WhatsApp via QR-code challenge
+/logout - invalidates your current session with WhatsApp
+/help - prints this message
+`
+
 // EventsHandler represents entity that handles events from telegram and whatsapp
 // event providers.
 type EventsHandler struct {
@@ -210,6 +218,19 @@ func (eh *EventsHandler) HandleRepeatedLoginEvent(event *domain.LoginEvent) erro
 		zap.Int64("chat_id", event.ChatID))
 
 	if err := eh.notifyTelegram("Already logged in"); err != nil {
+		return fmt.Errorf("failed to notify telegram: %w", err)
+	}
+
+	return nil
+}
+
+// HandleHelpEvent method handles help event.
+func (eh *EventsHandler) HandleHelpEvent(event *domain.HelpEvent) error {
+	eh.log.Debug("handle help event",
+		zap.String("username", event.FromUser),
+		zap.Int64("chat_id", event.ChatID))
+
+	if err := eh.notifyTelegram(helpMsg); err != nil {
 		return fmt.Errorf("failed to notify telegram: %w", err)
 	}
 

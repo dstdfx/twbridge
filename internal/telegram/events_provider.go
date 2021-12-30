@@ -63,6 +63,11 @@ func (ep *EventsProvider) Run(ctx context.Context) error {
 					ChatID:   update.Message.Chat.ID,
 					FromUser: update.Message.From.UserName,
 				}
+			case "/help":
+				ep.eventsCh <- &domain.HelpEvent{
+					ChatID:   update.Message.Chat.ID,
+					FromUser: update.Message.From.UserName,
+				}
 			default:
 				if update.Message.ReplyToMessage != nil {
 					// Extract jid from the message that is replied to
