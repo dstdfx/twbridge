@@ -128,7 +128,6 @@ func TestManager(t *testing.T) {
 		})
 
 		eventsHandlerMock := &mocks.EventsHandler{}
-		eventsHandlerMock.On("IsLoggedIn").Return(true)
 		eventsHandlerMock.On("HandleLogoutEvent", mock.Anything).Return(nil)
 
 		// Add test events handler
@@ -153,7 +152,6 @@ func TestManager(t *testing.T) {
 		cancel()
 		wg.Wait()
 
-		eventsHandlerMock.AssertCalled(t, "IsLoggedIn")
 		eventsHandlerMock.AssertCalled(t, "HandleLogoutEvent", mock.Anything)
 	})
 
@@ -164,7 +162,7 @@ func TestManager(t *testing.T) {
 		})
 
 		eventsHandlerMock := &mocks.EventsHandler{}
-		eventsHandlerMock.On("IsLoggedIn").Return(false)
+		eventsHandlerMock.On("HandleLogoutEvent", mock.Anything).Return(nil)
 
 		// Add test events handler
 		testMgr.eventHandlers[testChatID] = eventsHandlerMock
@@ -188,7 +186,7 @@ func TestManager(t *testing.T) {
 		cancel()
 		wg.Wait()
 
-		eventsHandlerMock.AssertCalled(t, "IsLoggedIn")
+		eventsHandlerMock.AssertCalled(t, "HandleLogoutEvent", mock.Anything)
 	})
 
 	t.Run("handle reply event", func(t *testing.T) {

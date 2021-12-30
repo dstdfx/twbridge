@@ -102,11 +102,6 @@ func (mgr *Manager) Run(ctx context.Context) {
 					continue
 				}
 
-				// Skip if client is not logged in
-				if !eventsHandler.IsLoggedIn() {
-					continue
-				}
-
 				if err := eventsHandler.HandleLogoutEvent(e); err != nil {
 					mgr.log.Error("failed to handle logout event", zap.Error(err))
 				}

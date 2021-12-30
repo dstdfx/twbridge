@@ -179,6 +179,15 @@ func (eh *EventsHandler) HandleLogoutEvent(event *domain.LogoutEvent) error {
 		zap.String("username", event.FromUser),
 		zap.Int64("chat_id", event.ChatID))
 
+	// Check if the client is already logged out
+	if !eh.IsLoggedIn() {
+		if err := eh.notifyTelegram("Already logged out"); err != nil {
+			return fmt.Errorf("failed to notify telegram: %w", err)
+		}
+
+		return nil
+	}
+
 	if err := eh.whatsappClient.Logout(); err != nil {
 		return fmt.Errorf("failed to logout: %w", err)
 	}
