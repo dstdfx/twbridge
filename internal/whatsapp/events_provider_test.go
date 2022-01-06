@@ -17,7 +17,7 @@ import (
 func TestEventsProvider(t *testing.T) {
 	testChatID := int64(123)
 
-	t.Run("handle error", func(t *testing.T) {
+	t.Run("handle error, ignored", func(t *testing.T) {
 		// Init test events provider
 		outgoingEvents := make(chan domain.Event, 1)
 		whatsappClientMock := &mocks.WhatsappClient{}
@@ -27,7 +27,24 @@ func TestEventsProvider(t *testing.T) {
 		})
 
 		// Call method in order to emulate whatsapp event
-		eventsProvider.HandleError(errors.New("test error")) //nolint
+		eventsProvider.HandleError(errors.New("error processing data: received invalid data")) //nolint
+		eventsProvider.HandleError(errors.New("invalid string with tag 174"))                  //nolint
+		whatsappClientMock.AssertNotCalled(t, "Restore")
+	})
+
+	t.Run("handle error, restore session", func(t *testing.T) {
+		// Init test events provider
+		outgoingEvents := make(chan domain.Event, 1)
+		whatsappClientMock := &mocks.WhatsappClient{}
+		whatsappClientMock.On("Restore").Return(nil)
+		eventsProvider := whatsapp.NewEventsProvider(zap.NewNop(), &whatsapp.Opts{
+			OutgoingEvents: outgoingEvents,
+			WhatsappClient: whatsappClientMock,
+		})
+
+		// Call method in order to emulate whatsapp event
+		eventsProvider.HandleError(whatsappsdk.ErrConnectionTimeout)
+		whatsappClientMock.AssertCalled(t, "Restore")
 	})
 
 	t.Run("handle text message", func(t *testing.T) {

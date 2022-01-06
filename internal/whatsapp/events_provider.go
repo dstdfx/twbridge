@@ -1,11 +1,18 @@
 package whatsapp
 
 import (
+	"errors"
+	"strings"
 	"time"
 
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/dstdfx/twbridge/internal/domain"
 	"go.uber.org/zap"
+)
+
+const (
+	restoreAttempts = 3
+	restoreInterval = time.Second
 )
 
 // EventsProvider represents whatsapp events provider.
@@ -40,11 +47,56 @@ func NewEventsProvider(log *zap.Logger, opts *Opts) *EventsProvider {
 	}
 }
 
+//nolint
 // HandleError method is called when error occurs.
 func (wh *EventsProvider) HandleError(err error) {
 	wh.log.Error("got error", zap.Error(err))
 
-	// TODO: implement restoring from saved session
+	// Ignore known errors that don't affect connection
+	if strings.Contains(err.Error(), "error processing data: received invalid data") ||
+		strings.Contains(err.Error(), "invalid string with tag 174") {
+
+		return
+	}
+
+	switch err.(type) {
+	case *whatsapp.ErrConnectionClosed, *whatsapp.ErrConnectionFailed:
+		if !wh.restoreSession() {
+			// TODO: send disconnect event
+		}
+	default:
+		if errors.Is(err, whatsapp.ErrConnectionTimeout) {
+			if !wh.restoreSession() {
+				// TODO: send disconnect event
+			}
+		}
+	}
+}
+
+func (wh *EventsProvider) restoreSession() (restored bool) {
+	for i := 1; i <= restoreAttempts; i++ {
+		wh.log.Debug("trying to restore whatsapp session...",
+			zap.Int64("chat_id", wh.chatID),
+			zap.Int("attempt", i))
+
+		err := wh.whatsappClient.Restore()
+		if err == nil {
+			wh.startAt = time.Now().Unix()
+			restored = true
+
+			wh.log.Debug("session has been restored", zap.Int64("chat_id", wh.chatID))
+
+			return
+		}
+
+		// TODO: fix to exponential backoff
+		time.Sleep(restoreInterval)
+	}
+
+	wh.log.Error("failed to restore whatsapp session after several attempts",
+		zap.Int64("chat_id", wh.chatID))
+
+	return
 }
 
 // ShouldCallSynchronously method indicates how whatsapp events should be handled.
