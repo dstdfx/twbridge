@@ -128,14 +128,10 @@ func (wh *EventsProvider) HandleTextMessage(message whatsapp.TextMessage) {
 		contactName = contact.Name
 	}
 
-	// TODO: handle outgoing events overflow
-	select {
-	case wh.outgoingEvents <- &domain.TextMessageEvent{
+	wh.outgoingEvents <- &domain.TextMessageEvent{
 		WhatsappRemoteJid:  message.Info.RemoteJid,
 		WhatsappSenderName: contactName,
 		Text:               message.Text,
 		ChatID:             wh.chatID,
-	}:
-	default:
 	}
 }
