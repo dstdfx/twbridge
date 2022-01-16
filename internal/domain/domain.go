@@ -14,6 +14,7 @@ const (
 	HelpEventType        EventType = "help"
 	TextMessageEventType EventType = "text_message" // whatsapp only
 	ReplyEventType       EventType = "reply"        // telegram only
+	DisconnectEventType  EventType = "disconnect_event"
 )
 
 // Event represents a generic event API.
@@ -111,6 +112,16 @@ func (re *ReplyEvent) Type() EventType {
 	return ReplyEventType
 }
 
+// DisconnectEvent represents a disconnect event.
+type DisconnectEvent struct {
+	// ChatID is telegram bot chat identifier.
+	ChatID int64
+}
+
+func (de *DisconnectEvent) Type() EventType {
+	return DisconnectEventType
+}
+
 // EventsHandler describes events handler API.
 type EventsHandler interface {
 	HandleStartEvent(*StartEvent) error
@@ -120,6 +131,7 @@ type EventsHandler interface {
 	HandleRepeatedLoginEvent(*LoginEvent) error
 	HandleTextMessageEvent(*TextMessageEvent) error
 	HandleReplyEvent(*ReplyEvent) error
+	HandleDisconnectEvent(*DisconnectEvent) error
 	IsLoggedIn() bool
 }
 

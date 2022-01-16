@@ -32,6 +32,8 @@ This step is needed in order to authenticate you in WhatsApp.
 
 So let's get it started.`
 
+const disconnectMsg = `The session is invalidated due to internal error, please repeat login process again.`
+
 const helpMsg = `
 Supported commands:
 /start - prints starting message
@@ -270,6 +272,27 @@ func (eh *EventsHandler) HandleReplyEvent(event *domain.ReplyEvent) error {
 			event.ChatID,
 			event.RemoteJid,
 			err)
+	}
+
+	return nil
+}
+
+// HandleDisconnectEvent method handles disconnect event.
+func (eh *EventsHandler) HandleDisconnectEvent(event *domain.DisconnectEvent) error {
+	eh.log.Debug("handle disconnect event",
+		zap.Int64("chat_id", event.ChatID))
+
+	// Attempt to logout the client and stop whatsapp handler
+	if err := eh.whatsappClient.Logout(); err != nil {
+		eh.log.Error("failed to logout disconnected client", zap.Error(err))
+	}
+
+	eh.mu.Lock()
+	eh.isWhatsAppLoggedIn = false
+	eh.mu.Unlock()
+
+	if err := eh.notifyTelegram(disconnectMsg); err != nil {
+		return fmt.Errorf("failed to notify telegram: %w", err)
 	}
 
 	return nil

@@ -294,4 +294,37 @@ func TestManager(t *testing.T) {
 
 		eventsHandlerMock.AssertCalled(t, "HandleTextMessageEvent", mock.Anything)
 	})
+
+	t.Run("handle disconnect event", func(t *testing.T) {
+		incomingEventsCh := make(chan domain.Event)
+		testMgr := NewManager(zap.NewNop(), &Opts{
+			IncomingEvents: incomingEventsCh,
+		})
+
+		eventsHandlerMock := &mocks.EventsHandler{}
+		eventsHandlerMock.On("HandleDisconnectEvent", mock.Anything).Return(nil)
+
+		// Add test events handler
+		testMgr.eventHandlers[testChatID] = eventsHandlerMock
+
+		// Run clients manager in a separate goroutine
+		ctx, cancel := context.WithCancel(context.Background())
+		wg := &sync.WaitGroup{}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			testMgr.Run(ctx)
+		}()
+
+		// Send login event
+		incomingEventsCh <- &domain.DisconnectEvent{
+			ChatID: testChatID,
+		}
+
+		// Stop clients manager
+		cancel()
+		wg.Wait()
+
+		eventsHandlerMock.AssertCalled(t, "HandleDisconnectEvent", mock.Anything)
+	})
 }

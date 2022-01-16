@@ -47,27 +47,26 @@ func NewEventsProvider(log *zap.Logger, opts *Opts) *EventsProvider {
 	}
 }
 
-//nolint
 // HandleError method is called when error occurs.
 func (wh *EventsProvider) HandleError(err error) {
 	wh.log.Error("got error", zap.Error(err))
 
 	// Ignore known errors that don't affect connection
 	if strings.Contains(err.Error(), "error processing data: received invalid data") ||
-		strings.Contains(err.Error(), "invalid string with tag 174") {
+		strings.Contains(err.Error(), "invalid string with tag 174") { // nolint
 
 		return
 	}
 
-	switch err.(type) {
+	switch err.(type) { // nolint
 	case *whatsapp.ErrConnectionClosed, *whatsapp.ErrConnectionFailed:
 		if !wh.restoreSession() {
-			// TODO: send disconnect event
+			wh.outgoingEvents <- &domain.DisconnectEvent{ChatID: wh.chatID}
 		}
 	default:
 		if errors.Is(err, whatsapp.ErrConnectionTimeout) {
 			if !wh.restoreSession() {
-				// TODO: send disconnect event
+				wh.outgoingEvents <- &domain.DisconnectEvent{ChatID: wh.chatID}
 			}
 		}
 	}

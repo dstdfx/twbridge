@@ -12,13 +12,27 @@ type EventsHandler struct {
 	mock.Mock
 }
 
-// HandleHelpEvent provides a mock function with given fields: event
-func (_m *EventsHandler) HandleHelpEvent(event *domain.HelpEvent) error {
-	ret := _m.Called(event)
+// HandleDisconnectEvent provides a mock function with given fields: _a0
+func (_m *EventsHandler) HandleDisconnectEvent(_a0 *domain.DisconnectEvent) error {
+	ret := _m.Called(_a0)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*domain.DisconnectEvent) error); ok {
+		r0 = rf(_a0)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// HandleHelpEvent provides a mock function with given fields: _a0
+func (_m *EventsHandler) HandleHelpEvent(_a0 *domain.HelpEvent) error {
+	ret := _m.Called(_a0)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(*domain.HelpEvent) error); ok {
-		r0 = rf(event)
+		r0 = rf(_a0)
 	} else {
 		r0 = ret.Error(0)
 	}

@@ -32,7 +32,7 @@ func TestEventsProvider(t *testing.T) {
 		whatsappClientMock.AssertNotCalled(t, "Restore")
 	})
 
-	t.Run("handle error, restore session", func(t *testing.T) {
+	t.Run("handle error, session restored", func(t *testing.T) {
 		// Init test events provider
 		outgoingEvents := make(chan domain.Event, 1)
 		whatsappClientMock := &mocks.WhatsappClient{}
@@ -45,6 +45,40 @@ func TestEventsProvider(t *testing.T) {
 		// Call method in order to emulate whatsapp event
 		eventsProvider.HandleError(whatsappsdk.ErrConnectionTimeout)
 		whatsappClientMock.AssertCalled(t, "Restore")
+	})
+
+	t.Run("handle error, failed to restore session", func(t *testing.T) {
+		// Init test events provider
+		outgoingEvents := make(chan domain.Event, 1)
+		whatsappClientMock := &mocks.WhatsappClient{}
+		whatsappClientMock.On("Restore").Return(errors.New("failed to restore session")) // nolint
+		eventsProvider := whatsapp.NewEventsProvider(zap.NewNop(), &whatsapp.Opts{
+			ChatID:         testChatID,
+			OutgoingEvents: outgoingEvents,
+			WhatsappClient: whatsappClientMock,
+		})
+
+		wg := &sync.WaitGroup{}
+		wg.Add(1)
+
+		var gotEvent domain.Event
+		go func() {
+			gotEvent = <-outgoingEvents
+			wg.Done()
+		}()
+
+		// Call method in order to emulate whatsapp event
+		eventsProvider.HandleError(whatsappsdk.ErrConnectionTimeout)
+		whatsappClientMock.AssertCalled(t, "Restore")
+
+		wg.Wait()
+
+		// Check that event has been sent to outgoing channel
+		assert.Equal(t, domain.DisconnectEventType, gotEvent.Type())
+
+		// Check the event's content
+		gotDisconnectEvent := gotEvent.(*domain.DisconnectEvent)
+		assert.Equal(t, testChatID, gotDisconnectEvent.ChatID)
 	})
 
 	t.Run("handle text message", func(t *testing.T) {
