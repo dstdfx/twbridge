@@ -60,4 +60,3 @@ Use the following command to run golangci-lint:
 make golangci-lint
 ```
 
-## TODO
