@@ -36,8 +36,16 @@ docker build -t twbridge .
 
 ## Running
 
+Run locally:
+
 ```bash
 export TELEGRAM_API_TOKEN=<your-telegram-bot-token>; ./twbridge
+```
+
+Run in docker:
+
+```bash
+docker run -d --env TELEGRAM_API_TOKEN="<YOUR-TELEGRAM_API_TOKEN>" ghcr.io/dstdfx/twbridge:latest
 ```
 
 ## Testing
