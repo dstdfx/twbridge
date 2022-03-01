@@ -134,3 +134,43 @@ func (wh *EventsProvider) HandleTextMessage(message whatsapp.TextMessage) {
 		ChatID:             wh.chatID,
 	}
 }
+
+// HandleTextMessage method is called when new image message is received.
+func (wh *EventsProvider) HandleImageMessage(message whatsapp.ImageMessage) {
+	if message.Info.Timestamp < uint64(wh.startAt) || message.Info.FromMe {
+		return
+	}
+
+	wh.log.Debug("got text message",
+		zap.Bool("from_me", message.Info.FromMe),
+		zap.Int("status", int(message.Info.Status)),
+		zap.String("push_name", message.Info.PushName),
+		zap.Uint64("timestamp", message.Info.Timestamp),
+		zap.String("remote_jid", message.Info.RemoteJid),
+		zap.String("sender_jid", message.Info.SenderJid))
+
+	// Get the contact name from the contacts store
+	var contactName string
+	contacts := wh.whatsappClient.GetContacts()
+	contact, ok := contacts[message.Info.RemoteJid]
+	if !ok {
+		contactName = "<unknown>"
+	} else {
+		contactName = contact.Name
+	}
+
+	//Download media data
+	mediaData, err := message.Download()
+	if err != nil {
+		return
+	}
+
+	//Write event to channel
+	wh.outgoingEvents <- &domain.ImageMessageEvent{
+		WhatsappRemoteJid:  message.Info.RemoteJid,
+		WhatsappSenderName: contactName,
+		ChatID:             wh.chatID,
+		ImageBytes:         mediaData,
+	}
+
+}

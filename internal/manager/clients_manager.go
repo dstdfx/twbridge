@@ -55,7 +55,7 @@ func (mgr *Manager) Run(ctx context.Context) {
 			case *domain.StartEvent:
 				var eventsHandler domain.EventsHandler
 
-				// Check if the client already has an events provider
+				// Check if the client already has an events handler
 				eventsHandler, ok := mgr.eventHandlers[e.ChatID]
 				if !ok {
 					// Create events handler for new client and handle event

@@ -8,13 +8,14 @@ const TextMessageFmt = "From: %s [jid: %s] \n= = = = = = = = = = = =\nMessage: %
 type EventType string
 
 const (
-	StartEventType       EventType = "start"
-	LoginEventType       EventType = "login"
-	LogoutEventType      EventType = "logout"
-	HelpEventType        EventType = "help"
-	TextMessageEventType EventType = "text_message" // whatsapp only
-	ReplyEventType       EventType = "reply"        // telegram only
-	DisconnectEventType  EventType = "disconnect_event"
+	StartEventType        EventType = "start"
+	LoginEventType        EventType = "login"
+	LogoutEventType       EventType = "logout"
+	HelpEventType         EventType = "help"
+	TextMessageEventType  EventType = "text_message" // whatsapp only
+	ImageMessageEventType EventType = "text_message" // whatsapp only
+	ReplyEventType        EventType = "reply"        // telegram only
+	DisconnectEventType   EventType = "disconnect_event"
 )
 
 // Event represents a generic event API.
@@ -93,6 +94,25 @@ func (te *TextMessageEvent) Type() EventType {
 	return TextMessageEventType
 }
 
+// ImageMessageEvent represents an incoming image message
+type ImageMessageEvent struct {
+	// ChatID is telegram bot chat identifier.
+	ChatID int64
+
+	// WhatsappRemoteJid is a whatsapp client identifier that sent the message.
+	WhatsappRemoteJid string
+
+	// WhatsappSenderName is a whatsapp client's name that sent the message.
+	WhatsappSenderName string
+
+	// Text is a text message body.
+	ImageBytes []byte
+}
+
+func (te *ImageMessageEvent) Type() EventType {
+	return ImageMessageEventType
+}
+
 // ReplyEvent represents a message reply event.
 type ReplyEvent struct {
 	// ChatID is telegram bot chat identifier.
@@ -130,6 +150,7 @@ type EventsHandler interface {
 	HandleHelpEvent(*HelpEvent) error
 	HandleRepeatedLoginEvent(*LoginEvent) error
 	HandleTextMessageEvent(*TextMessageEvent) error
+	HandleImageMessageEvent(*ImageMessageEvent) error
 	HandleReplyEvent(*ReplyEvent) error
 	HandleDisconnectEvent(*DisconnectEvent) error
 	IsLoggedIn() bool
