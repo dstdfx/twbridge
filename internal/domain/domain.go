@@ -12,9 +12,9 @@ const (
 	LoginEventType        EventType = "login"
 	LogoutEventType       EventType = "logout"
 	HelpEventType         EventType = "help"
-	TextMessageEventType  EventType = "text_message" // whatsapp only
-	ImageMessageEventType EventType = "text_message" // whatsapp only
-	ReplyEventType        EventType = "reply"        // telegram only
+	TextMessageEventType  EventType = "text_message"  // whatsapp only
+	ImageMessageEventType EventType = "image_message" // whatsapp only
+	ReplyEventType        EventType = "reply"         // telegram only
 	DisconnectEventType   EventType = "disconnect_event"
 )
 
