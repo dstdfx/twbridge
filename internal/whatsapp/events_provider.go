@@ -159,18 +159,17 @@ func (wh *EventsProvider) HandleImageMessage(message whatsapp.ImageMessage) {
 		contactName = contact.Name
 	}
 
-	//Download media data
+	// Download media data
 	mediaData, err := message.Download()
 	if err != nil {
 		return
 	}
 
-	//Write event to channel
+	// Write event to channel
 	wh.outgoingEvents <- &domain.ImageMessageEvent{
 		WhatsappRemoteJid:  message.Info.RemoteJid,
 		WhatsappSenderName: contactName,
 		ChatID:             wh.chatID,
 		ImageBytes:         mediaData,
 	}
-
 }

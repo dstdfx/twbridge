@@ -94,7 +94,7 @@ func (te *TextMessageEvent) Type() EventType {
 	return TextMessageEventType
 }
 
-// ImageMessageEvent represents an incoming image message
+// ImageMessageEvent represents an incoming image message.
 type ImageMessageEvent struct {
 	// ChatID is telegram bot chat identifier.
 	ChatID int64

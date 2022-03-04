@@ -258,7 +258,6 @@ func (eh *EventsHandler) HandleTextMessageEvent(event *domain.TextMessageEvent) 
 
 // HandleImageMessageEvent method handles image message event.
 func (eh *EventsHandler) HandleImageMessageEvent(event *domain.ImageMessageEvent) error {
-
 	eh.log.Debug("handle image message event",
 		zap.String("remote_jid", event.WhatsappRemoteJid))
 
