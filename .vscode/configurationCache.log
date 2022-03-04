@@ -1,1 +1,0 @@
-{"buildTargets":["build","default","golangci-lint","make","tests","unittests"],"launchTargets":[],"customConfigurationProvider":{"workspaceBrowse":{"browsePath":[],"compilerArgs":[]},"fileIndex":[]}}
