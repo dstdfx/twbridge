@@ -1,7 +1,6 @@
 make --dry-run --always-make --keep-going --print-directory
 make: Entering directory `/Users/alex/csci/opensource/twbridge'
 sh -c "'/Users/alex/csci/opensource/twbridge/scripts/golangci_lint_check.sh'"
- 
 sh -c "'/Users/alex/csci/opensource/twbridge/scripts/unit_tests.sh'"
 make: Leaving directory `/Users/alex/csci/opensource/twbridge'
  
