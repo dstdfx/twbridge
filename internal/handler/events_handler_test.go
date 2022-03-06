@@ -1,6 +1,8 @@
 package handler_test
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestEventsHandler(t *testing.T) {
 	t.Run("handle start event", func(t *testing.T) {

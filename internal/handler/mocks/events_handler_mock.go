@@ -124,6 +124,20 @@ func (_m *EventsHandler) HandleTextMessageEvent(_a0 *domain.TextMessageEvent) er
 	return r0
 }
 
+// HandleTextMessageEvent provides a mock function with given fields: _a0
+func (_m *EventsHandler) HandleImageMessageEvent(_a0 *domain.ImageMessageEvent) error {
+	ret := _m.Called(_a0)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*domain.ImageMessageEvent) error); ok {
+		r0 = rf(_a0)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // IsLoggedIn provides a mock function with given fields:
 func (_m *EventsHandler) IsLoggedIn() bool {
 	ret := _m.Called()

@@ -1,2 +1,5 @@
 .idea
 vendor
+my-api-key.txt
+.vscode
+twbridge

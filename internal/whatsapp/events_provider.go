@@ -118,14 +118,7 @@ func (wh *EventsProvider) HandleTextMessage(message whatsapp.TextMessage) {
 		zap.String("sender_jid", message.Info.SenderJid))
 
 	// Get the contact name from the contacts store
-	var contactName string
-	contacts := wh.whatsappClient.GetContacts()
-	contact, ok := contacts[message.Info.RemoteJid]
-	if !ok {
-		contactName = "<unknown>"
-	} else {
-		contactName = contact.Name
-	}
+	contactName := wh.getContactName(message.Info.RemoteJid)
 
 	wh.outgoingEvents <- &domain.TextMessageEvent{
 		WhatsappRemoteJid:  message.Info.RemoteJid,
@@ -133,4 +126,53 @@ func (wh *EventsProvider) HandleTextMessage(message whatsapp.TextMessage) {
 		Text:               message.Text,
 		ChatID:             wh.chatID,
 	}
+}
+
+// HandleImageMessage method is called when new image message is received.
+func (wh *EventsProvider) HandleImageMessage(message whatsapp.ImageMessage) {
+	if message.Info.Timestamp < uint64(wh.startAt) || message.Info.FromMe {
+		return
+	}
+
+	wh.log.Debug("got image message",
+		zap.Bool("from_me", message.Info.FromMe),
+		zap.Int("status", int(message.Info.Status)),
+		zap.String("push_name", message.Info.PushName),
+		zap.Uint64("timestamp", message.Info.Timestamp),
+		zap.String("remote_jid", message.Info.RemoteJid),
+		zap.String("sender_jid", message.Info.SenderJid))
+
+	// Get the contact name from the contacts store
+	contactName := wh.getContactName(message.Info.RemoteJid)
+
+	// Download media data
+	mediaData, err := message.Download()
+	if err != nil {
+		wh.log.Error("got error", zap.Error(err))
+
+		return
+	}
+
+	// Write event to channel
+	wh.outgoingEvents <- &domain.ImageMessageEvent{
+		WhatsappRemoteJid:  message.Info.RemoteJid,
+		WhatsappSenderName: contactName,
+		ChatID:             wh.chatID,
+		ImageBytes:         mediaData,
+	}
+}
+
+// getContactName gets the contact name of a sender given a remoteJid string.
+func (wh *EventsProvider) getContactName(remoteJid string) string {
+	// Get the contact name from the contacts store
+	var contactName string
+	contacts := wh.whatsappClient.GetContacts()
+	contact, ok := contacts[remoteJid]
+	if !ok {
+		contactName = "<unknown>"
+	} else {
+		contactName = contact.Name
+	}
+
+	return contactName
 }
