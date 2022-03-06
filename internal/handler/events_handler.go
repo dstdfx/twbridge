@@ -256,7 +256,8 @@ func (eh *EventsHandler) HandleTextMessageEvent(event *domain.TextMessageEvent) 
 	return nil
 }
 
-// HandleImageMessageEvent method handles image message event.
+// HandleImageMessageEvent method handles image message event from whatsapp api.
+// by uploading image to telegram chat.
 func (eh *EventsHandler) HandleImageMessageEvent(event *domain.ImageMessageEvent) error {
 	eh.log.Debug("handle image message event",
 		zap.String("remote_jid", event.WhatsappRemoteJid))
@@ -269,14 +270,8 @@ func (eh *EventsHandler) HandleImageMessageEvent(event *domain.ImageMessageEvent
 
 	photo := tgbotapi.NewPhotoUpload(eh.chatID, imageReader)
 	if _, err := eh.telegramAPI.Send(photo); err != nil {
-		eh.log.Error("failed to send QR-code", zap.Error(err))
-
-		return fmt.Errorf("failed to send image message chat_id=%d: %w",
-			event.ChatID,
-			err)
+		return fmt.Errorf("failed to notify telegram: %w", err)
 	}
-
-	eh.log.Debug("Image message from whatsapp has been forwarded")
 
 	return nil
 }

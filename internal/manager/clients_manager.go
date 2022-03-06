@@ -141,6 +141,18 @@ func (mgr *Manager) Run(ctx context.Context) {
 				if err := eventsHandler.HandleTextMessageEvent(e); err != nil {
 					mgr.log.Error("failed to handle text message event", zap.Error(err))
 				}
+			case *domain.ImageMessageEvent:
+				eventsHandler, ok := mgr.eventHandlers[e.ChatID]
+				if !ok {
+					mgr.log.Error("failed to find events handler for the chat_id",
+						zap.Int64("chat_id", e.ChatID))
+
+					continue
+				}
+
+				if err := eventsHandler.HandleImageMessageEvent(e); err != nil {
+					mgr.log.Error("failed to handle text message event", zap.Error(err))
+				}
 			case *domain.DisconnectEvent:
 				eventsHandler, ok := mgr.eventHandlers[e.ChatID]
 				if !ok {
