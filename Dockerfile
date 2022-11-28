@@ -9,7 +9,7 @@ RUN go build -mod=mod -a -installsuffix cgo -ldflags \
         -X github.com/dstdfx/twbridge/cmd/twbridge/app.buildDate=$(date +%Y%m%d)" \
         -o twbridge ./cmd/twbridge
 
-FROM alpine:3.15.2
+FROM alpine:3.17.0
 RUN apk add --no-cache ca-certificates
 COPY --from=build /workspace/twbridge /usr/local/bin/twbridge
 ENTRYPOINT ["twbridge"]
